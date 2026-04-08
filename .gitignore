@@ -531,3 +531,5 @@ healthchecksdb/
 **/launchSettings.json
 **/Properties/launchSettings.json
 !**/Properties/launchSettings.json.example
+
+*.lscache

@@ -6,6 +6,8 @@ builder.Services.AddOpenApi();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
+// TODO:(Hamza-Bayar-2) Connact the AppDbContext
+
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.
