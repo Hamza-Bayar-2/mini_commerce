@@ -1,0 +1,113 @@
+# Mini Commerce Architecture and Development Guide
+
+## Onion Architecture Layers
+
+In this project, we follow the **Onion Architecture** principles to ensure a decoupled and testable codebase.
+
+### Solution Structure
+```
+MicroCommerce/
+├── src/
+│   ├── AuthService/
+│   │   ├── AuthService.API/
+│   │   ├── AuthService.Application/
+│   │   ├── AuthService.Domain/
+│   │   └── AuthService.Infrastructure/
+│   ├── ProductService/
+│   │   ├── ProductService.API/
+│   │   ├── ProductService.Application/
+│   │   ├── ProductService.Domain/
+│   │   └── ProductService.Infrastructure/
+│   ├── LogService/
+│   │   ├── LogService.API/
+│   │   ├── LogService.Application/
+│   │   ├── LogService.Domain/
+│   │   └── LogService.Infrastructure/
+│   └── Gateway/
+│       └── Gateway.API/
+├── docker-compose.yml
+├── docker-compose.override.yml
+└── README.md
+```
+
+### Layer Definitions
+
+1.  **Domain (Core):**
+    - Contains Entities, Value Objects, Enums, and Domain Exceptions.
+    - **Dependency:** None.
+2.  **Application:**
+    - Contains Business Logic, Interfaces (Repositories/Services), DTOs, Mappers, and Validators.
+    - **Dependency:** Reference only **Domain**.
+3.  **Infrastructure:**
+    - Contains External Service implementations, Persistence (Entity Framework, Dapper), and Logging.
+    - **Dependency:** Reference **Application**.
+4.  **Presentation (API):**
+    - Contains Controllers, Middlewares, and Program.cs (DI Configuration).
+    - **Dependency:** Reference **Application** (for usage) and **Infrastructure** (strictly for DI registration).
+
+---
+
+## Project Setup Commands
+
+When creating a new microservice under `src/`, follow these steps:
+
+### 1. Create Projects
+
+```powershell
+cd src/SERVICE_NAME
+dotnet new sln -n SERVICE_NAME
+
+dotnet new webapi -n SERVICE_NAME.API --no-openapi false
+dotnet new classlib -n SERVICE_NAME.Application
+dotnet new classlib -n SERVICE_NAME.Domain
+dotnet new classlib -n SERVICE_NAME.Infrastructure
+
+dotnet sln add SERVICE_NAME.API/SERVICE_NAME.API.csproj
+dotnet sln add SERVICE_NAME.Application/SERVICE_NAME.Application.csproj
+dotnet sln add SERVICE_NAME.Domain/SERVICE_NAME.Domain.csproj
+dotnet sln add SERVICE_NAME.Infrastructure/SERVICE_NAME.Infrastructure.csproj
+```
+
+### 2. Establish Layer Connections
+
+```powershell
+cd src/SERVICE_NAME
+
+# API references Application and Infrastructure
+dotnet add SERVICE_NAME.API/SERVICE_NAME.API.csproj reference SERVICE_NAME.Application/SERVICE_NAME.Application.csproj SERVICE_NAME.Infrastructure/SERVICE_NAME.Infrastructure.csproj
+
+# Infrastructure references Application
+dotnet add SERVICE_NAME.Infrastructure/SERVICE_NAME.Infrastructure.csproj reference SERVICE_NAME.Application/SERVICE_NAME.Application.csproj
+
+# Application references Domain
+dotnet add SERVICE_NAME.Application/SERVICE_NAME.Application.csproj reference SERVICE_NAME.Domain/SERVICE_NAME.Domain.csproj
+```
+
+### 3. Add Essential NuGet Packages
+
+For each service, you should add these base packages to follow the architecture:
+
+```powershell
+cd src/SERVICE_NAME
+
+# Infrastructure: Database and Tools
+dotnet add SERVICE_NAME.Infrastructure/SERVICE_NAME.Infrastructure.csproj package Microsoft.EntityFrameworkCore.SqlServer
+dotnet add SERVICE_NAME.Infrastructure/SERVICE_NAME.Infrastructure.csproj package Microsoft.EntityFrameworkCore.Tools
+
+# Application: Business Logic and Validation
+dotnet add SERVICE_NAME.Application/SERVICE_NAME.Application.csproj package MediatR
+dotnet add SERVICE_NAME.Application/SERVICE_NAME.Application.csproj package FluentValidation
+
+# API: Security and Documentation
+dotnet add SERVICE_NAME.API/SERVICE_NAME.API.csproj package Microsoft.AspNetCore.Authentication.JwtBearer
+dotnet add SERVICE_NAME.API/SERVICE_NAME.API.csproj package Microsoft.AspNetCore.Identity.EntityFrameworkCore
+dotnet add SERVICE_NAME.API/SERVICE_NAME.API.csproj package Swashbuckle.AspNetCore
+```
+
+---
+
+## Best Practices
+
+- **API Layer:** Use only `Application` types in your Controllers. Use `Infrastructure` only in `Program.cs` for Dependency Injection.
+- **Interfaces:** Always define your repository and service interfaces in the `Application` layer.
+- **Entities:** Keep them pure in the `Domain` layer, away from any ORM-specific logic if possible.
