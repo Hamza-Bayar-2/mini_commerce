@@ -1,0 +1,98 @@
+{
+  "version": "1.0.0",
+  "darkMode": true,
+  "gridEnabling": false,
+  "detailLevel": "All",
+  "tablePositions": [
+    {
+      "name": "users",
+      "schemaName": "public",
+      "x": 46.42313700000008,
+      "y": -233.0117398235294
+    },
+    {
+      "name": "user_credentials",
+      "schemaName": "public",
+      "x": 62.92020731250011,
+      "y": 93.8582711359553
+    },
+    {
+      "name": "user_refresh_tokens",
+      "schemaName": "public",
+      "x": 417.5785717432186,
+      "y": -25.687155594077126
+    },
+    {
+      "name": "user_audit_logs",
+      "schemaName": "public",
+      "x": 420.5968822900936,
+      "y": -233.0117398235294
+    }
+  ],
+  "tableGroupCollapseStates": [],
+  "stickyNoteLayouts": [],
+  "referencePaths": [
+    {
+      "firstFieldNames": [
+        "id"
+      ],
+      "firstTableName": "users",
+      "firstSchemaName": "public",
+      "firstRelation": "1",
+      "secondFieldNames": [
+        "user_id"
+      ],
+      "secondTableName": "user_credentials",
+      "secondSchemaName": "public",
+      "secondRelation": "*",
+      "firstEndpointSide": "left",
+      "secondEndpointSide": "left",
+      "checkPoints": []
+    },
+    {
+      "firstFieldNames": [
+        "id"
+      ],
+      "firstTableName": "users",
+      "firstSchemaName": "public",
+      "firstRelation": "1",
+      "secondFieldNames": [
+        "user_id"
+      ],
+      "secondTableName": "user_refresh_tokens",
+      "secondSchemaName": "public",
+      "secondRelation": "*",
+      "checkPoints": []
+    },
+    {
+      "firstFieldNames": [
+        "id"
+      ],
+      "firstTableName": "user_refresh_tokens",
+      "firstSchemaName": "public",
+      "firstRelation": "1",
+      "secondFieldNames": [
+        "replaced_by"
+      ],
+      "secondTableName": "user_refresh_tokens",
+      "secondSchemaName": "public",
+      "secondRelation": "*",
+      "checkPoints": []
+    },
+    {
+      "firstFieldNames": [
+        "id"
+      ],
+      "firstTableName": "users",
+      "firstSchemaName": "public",
+      "firstRelation": "1",
+      "secondFieldNames": [
+        "user_id"
+      ],
+      "secondTableName": "user_audit_logs",
+      "secondSchemaName": "public",
+      "secondRelation": "*",
+      "checkPoints": []
+    }
+  ]
+}
