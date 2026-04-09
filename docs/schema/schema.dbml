@@ -10,12 +10,29 @@ Table users {
   created_at timestamp [default: `now()`]
 }
 
+Table roles {
+  id smallint [pk]
+  name varchar(50) [not null, note: 'admin, customer, editor, warehouse_manager, seller']
+}
+
+// Junction table (Many-to-Many)
+Table user_roles {
+  user_id uuid [not null]
+  role_id smallint [not null]
+  
+  Indexes {
+    (user_id, role_id) [pk]
+  }
+}
+Ref: users.id < user_roles.user_id [delete: cascade]
+Ref: roles.id < user_roles.role_id [update: restrict, delete: restrict] 
+
 Table user_credentials {
   user_id uuid [pk]
   password_hash text [not null]
   updated_at timestamp [default: `now()`]
 }
-Ref: users.id < user_credentials.user_id [delete: cascade]
+Ref: users.id - user_credentials.user_id [delete: cascade]
 
 Table user_refresh_tokens {
   id uuid [pk, default: `gen_random_uuid()`]

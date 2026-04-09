@@ -15,6 +15,7 @@ public partial class User
 
     public string? PhoneNumber { get; set; }
 
+
     /// <summary>
     /// Soft delete uygulanan kayıtların silinme anı
     /// </summary>
@@ -26,4 +27,5 @@ public partial class User
 
     public virtual ICollection<UserRefreshToken> UserRefreshTokens { get; set; } = new List<UserRefreshToken>();
 
+    public virtual ICollection<Role> Roles { get; set; } = new List<Role>();
 }

@@ -11,12 +11,14 @@ namespace AuthService.Application.Features.Auth.Commands.Register;
 public class RegisterCommandHandler : IRequestHandler<RegisterCommand, AuthResponseDto>
 {
   private readonly IUserRepository _userRepo;
+  private readonly IRoleRepository _roleRepo;
   private readonly ITokenService _tokenService;
   private readonly IUnitOfWork _unitOfWork;
 
-  public RegisterCommandHandler(IUserRepository userRepo, ITokenService tokenService, IUnitOfWork unitOfWork)
+  public RegisterCommandHandler(IUserRepository userRepo, IRoleRepository roleRepo, ITokenService tokenService, IUnitOfWork unitOfWork)
   {
     _userRepo = userRepo;
+    _roleRepo = roleRepo;
     _tokenService = tokenService;
     _unitOfWork = unitOfWork;
   }
@@ -29,6 +31,8 @@ public class RegisterCommandHandler : IRequestHandler<RegisterCommand, AuthRespo
 
     var now = DateTime.UtcNow;
 
+    var roles = await _roleRepo.GetRolesByNamesAsync(["customer"], ct);
+
     var user = new User
     {
       Id = Guid.NewGuid(),
@@ -37,6 +41,7 @@ public class RegisterCommandHandler : IRequestHandler<RegisterCommand, AuthRespo
       Email = request.Email,
       PhoneNumber = request.PhoneNumber,
       CreatedAt = now,
+      Roles = roles,
       UserCredential = new UserCredential
       {
         PasswordHash = BCrypt.Net.BCrypt.HashPassword(request.Password),
@@ -46,7 +51,7 @@ public class RegisterCommandHandler : IRequestHandler<RegisterCommand, AuthRespo
 
     await _userRepo.AddAsync(user, ct);
 
-    var accessResult = await _tokenService.GenerateAccessTokenAsync(user, ["User"], ct);
+    var accessResult = await _tokenService.GenerateAccessTokenAsync(user, [.. roles.Select(r => r.Name)], ct);
     var refreshResult = await _tokenService.GenerateRefreshTokenAsync(user.Id, null, now, ct);
 
     if (!accessResult.IsSuccess || !refreshResult.IsSuccess)

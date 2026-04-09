@@ -11,6 +11,7 @@ public partial class AppDbContext : DbContext
 
 
     public virtual DbSet<User> Users { get; set; }
+    public virtual DbSet<Role> Roles { get; set; }
     public virtual DbSet<UserCredential> UserCredentials { get; set; }
     public virtual DbSet<UserRefreshToken> UserRefreshTokens { get; set; }
 
@@ -53,6 +54,40 @@ public partial class AppDbContext : DbContext
             entity.Property(e => e.PhoneNumber)
                 .HasMaxLength(20)
                 .HasColumnName("phone_number");
+
+            entity.HasMany(d => d.Roles)
+                .WithMany(p => p.Users)
+                .UsingEntity<Dictionary<string, object>>(
+                    "user_roles",
+                    j => j.HasOne<Role>().WithMany().HasForeignKey("role_id").OnDelete(DeleteBehavior.Restrict).HasConstraintName("FK_user_roles_roles"),
+                    j => j.HasOne<User>().WithMany().HasForeignKey("user_id").OnDelete(DeleteBehavior.Cascade).HasConstraintName("FK_user_roles_users"),
+                    j =>
+                    {
+                        j.HasKey("user_id", "role_id").HasName("PK_user_roles");
+                        j.ToTable("user_roles");
+                    });
+        });
+
+        modelBuilder.Entity<Role>(entity =>
+        {
+            entity.HasKey(e => e.Id).HasName("PK_roles");
+
+            entity.ToTable("roles");
+
+            entity.Property(e => e.Id)
+                .ValueGeneratedNever()
+                .HasColumnName("id");
+
+            entity.Property(e => e.Name)
+                .HasMaxLength(50)
+                .HasColumnName("name");
+
+            entity.HasData(
+                new Role { Id = 1, Name = "customer" },
+                new Role { Id = 2, Name = "seller" },
+                new Role { Id = 3, Name = "admin" },
+                new Role { Id = 4, Name = "editor" }
+            );
         });
 
         modelBuilder.Entity<UserCredential>(entity =>
