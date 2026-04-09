@@ -1,5 +1,3 @@
-
-
 using AuthService.Application.DTOs;
 using AuthService.Application.Interfaces;
 using AuthService.Application.Interfaces.Repositories;
@@ -13,14 +11,12 @@ public class RegisterCommandHandler : IRequestHandler<RegisterCommand, AuthRespo
   private readonly IUserRepository _userRepo;
   private readonly IRoleRepository _roleRepo;
   private readonly ITokenService _tokenService;
-  private readonly IUnitOfWork _unitOfWork;
 
-  public RegisterCommandHandler(IUserRepository userRepo, IRoleRepository roleRepo, ITokenService tokenService, IUnitOfWork unitOfWork)
+  public RegisterCommandHandler(IUserRepository userRepo, IRoleRepository roleRepo, ITokenService tokenService)
   {
     _userRepo = userRepo;
     _roleRepo = roleRepo;
     _tokenService = tokenService;
-    _unitOfWork = unitOfWork;
   }
 
   public async Task<AuthResponseDto> Handle(RegisterCommand request, CancellationToken ct)
@@ -55,15 +51,17 @@ public class RegisterCommandHandler : IRequestHandler<RegisterCommand, AuthRespo
     var refreshResult = await _tokenService.GenerateRefreshTokenAsync(user.Id, null, now, ct);
 
     if (!accessResult.IsSuccess || !refreshResult.IsSuccess)
-      throw new Exception("Token generation failed.");
+      throw new Exception("Token generation failed."
+      + accessResult.ErrorMessage + "\n"
+      + refreshResult.ErrorMessage);
 
-    await _unitOfWork.SaveChangesAsync(ct);
+    // TODO appand to the cookies (jwt and refreshToken)
 
     return new AuthResponseDto
     {
       AccessToken = accessResult.Data!,
-      RefreshToken = refreshResult.Data.UnhashedToken,
-      RefreshTokenExpiresAt = refreshResult.Data.Entity.ExpiresAt
+      RefreshToken = refreshResult.Data!.UnhashedToken,
+      RefreshTokenExpiresAt = refreshResult.Data!.Entity.ExpiresAt
     };
   }
 }

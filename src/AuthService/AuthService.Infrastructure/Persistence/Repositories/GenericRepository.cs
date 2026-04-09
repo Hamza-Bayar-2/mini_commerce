@@ -16,13 +16,13 @@ public class GenericRepository<T> : IGenericRepository<T> where T : class
         return entity;
     }
 
-    public Task<T> Update(T entity)
+    public async Task<T> UpdateAsync(T entity)
     {
         _db.Set<T>().Update(entity);
-        return Task.FromResult(entity);
+        return await Task.FromResult(entity);
     }
 
-    public async Task<T?> GetById(Guid id, CancellationToken ct = default)
+    public async Task<T?> GetByIdAsync(Guid id, CancellationToken ct = default)
     {
         return await _db.Set<T>().FindAsync([id], cancellationToken: ct);
     }
