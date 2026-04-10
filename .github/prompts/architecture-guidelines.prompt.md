@@ -26,10 +26,14 @@ To ensure data consistency and integrity, direct calls to `SaveChangesAsync()` f
 ### What Does This Mean For You?
 When you write business logic inside a Service or a Command Handler, you only deal with repositories (e.g., `await _userRepo.AddAsync(user, ct)`). You **DO NOT** manually save changes. The system automatically inserts/updates the DB safely when your handler finishes its execution without errors.
 
-## 3. Repositories
+## 3. Repositories and Entity Configuration
 
-The project uses the Generic Repository Pattern with a specific implementation class.
+The project uses the Generic Repository Pattern and Entity Framework Core for data access.
 
+*   **Fluent Configuration (IEntityTypeConfiguration):** Direct configuration of entities within `AppDbContext` using `onModelCreating` is strictly **FORBIDDEN**. 
+    *   Every entity MUST have its own configuration class implementing `IEntityTypeConfiguration<T>` (e.g., `UserConfiguration : IEntityTypeConfiguration<User>`).
+    *   Configurations MUST be placed in the `Infrastructure.Persistence.Configurations` folder.
+    *   `AppDbContext` uses `modelBuilder.ApplyConfigurationsFromAssembly(typeof(AppDbContext).Assembly)` to automatically register these configurations.
 *   **IGenericRepository<T>:** Contains only basic method definitions like `GetById`, `AddAsync`, `Update`, `Remove`. Note that these methods simply interact with `DbContext.Set<T>()` and do not execute `SaveChanges`.
 *   **Specific Repositories:** Entities should have their own interfaces (e.g., `IUserRepository : IGenericRepository<User>`) and implementation classes (e.g., `UserRepository : GenericRepository<User>, IUserRepository`) if they have specific querying needs (like `GetByEmailAsync`).
 *   **CancellationToken:** Every single async method traversing the application down to the repositories MUST accept and pass the `CancellationToken (ct)` to support cooperative cancellation of asynchronous operations.
