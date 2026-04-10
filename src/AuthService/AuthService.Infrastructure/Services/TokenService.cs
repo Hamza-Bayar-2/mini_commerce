@@ -8,6 +8,7 @@ using AuthService.Application.Interfaces.Repositories;
 using AuthService.Domain.Entities;
 using Microsoft.Extensions.Configuration;
 using Microsoft.IdentityModel.Tokens;
+using Microsoft.AspNetCore.WebUtilities;
 
 namespace AuthService.Infrastructure.Services;
 
@@ -71,16 +72,18 @@ public class TokenService : ITokenService
   public async Task<Result<(UserRefreshToken Entity, string UnhashedToken)>> GenerateRefreshTokenAsync(Guid userId, Guid? oldTokenId, DateTime now, CancellationToken ct = default)
   {
 
-    var newRefreshToken = Convert.ToBase64String(RandomNumberGenerator.GetBytes(64));
-    var result = await HashToken(newRefreshToken);
-    if (!result.IsSuccess)
-      return Result<(UserRefreshToken, string)>.Failure(result.ErrorMessage!);
+    var bytes = RandomNumberGenerator.GetBytes(64);
+    var unhashedToken = WebEncoders.Base64UrlEncode(bytes);
+
+    var hashedTokenResult = await HashToken(unhashedToken);
+    if (!hashedTokenResult.IsSuccess)
+      return Result<(UserRefreshToken, string)>.Failure(hashedTokenResult.ErrorMessage!);
 
     var newRefreshTokenEntity = new UserRefreshToken
     {
       Id = Guid.NewGuid(),
       UserId = userId,
-      TokenHash = result.Data!,
+      TokenHash = hashedTokenResult.Data!,
       ExpiresAt = now.AddDays(14),
       IsRevoked = false,
       CreatedAt = now,
@@ -101,13 +104,14 @@ public class TokenService : ITokenService
 
     await _refreshTokenRepo.AddAsync(newRefreshTokenEntity, ct);
 
-    return Result<(UserRefreshToken, string)>.Success((newRefreshTokenEntity, newRefreshToken));
+    return Result<(UserRefreshToken, string)>.Success((newRefreshTokenEntity, unhashedToken));
   }
 
   public Task<Result<string>> HashToken(string token)
   {
     var bytes = SHA256.HashData(Encoding.UTF8.GetBytes(token));
-    return Task.FromResult(Result<string>.Success(Convert.ToBase64String(bytes)));
+    var tokenHash = Convert.ToBase64String(bytes);
+    return Task.FromResult(Result<string>.Success(tokenHash));
   }
 
   public async Task<Result<UserRefreshToken>> ValidateRefreshTokenAsync(string tokenString, DateTime now, CancellationToken ct = default)
