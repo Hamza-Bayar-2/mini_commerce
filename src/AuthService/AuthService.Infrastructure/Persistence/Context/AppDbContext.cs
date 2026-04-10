@@ -16,8 +16,6 @@ public partial class AppDbContext : DbContext
     public virtual DbSet<UserCredential> UserCredentials { get; set; }
     public virtual DbSet<UserRefreshToken> UserRefreshTokens { get; set; }
 
-
-
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         modelBuilder.ApplyConfigurationsFromAssembly(typeof(AppDbContext).Assembly);
