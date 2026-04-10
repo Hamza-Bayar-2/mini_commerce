@@ -28,9 +28,10 @@ public class TokenService : ITokenService
       return Result<string>.Failure("User object cannot be null.");
 
     // Yapılandırma değerlerini güvenli oku
-    var jwtKey = _config["Jwt:Key"] ?? throw new InvalidOperationException("JWT Key is missing in configuration.");
-    var jwtIssuer = _config["Jwt:Issuer"] ?? "mini_commerce.auth";
-    var expireMinutes = int.Parse(_config["Jwt:ExpireMinutes"] ?? "15");
+    var jwtKey = _config["JwtSettings:Key"] ?? throw new InvalidOperationException("JWT Key is missing in configuration.");
+    var jwtIssuer = _config["JwtSettings:Issuer"] ?? "mini_commerce.auth";
+    var jwtAudience = _config["JwtSettings:Audience"] ?? "mini_commerce.auth";
+    var expireMinutes = int.Parse(_config["JwtSettings:ExpireMinutes"] ?? "15");
 
     var key = Encoding.UTF8.GetBytes(jwtKey);
     var nowUtc = DateTime.UtcNow;
@@ -53,7 +54,7 @@ public class TokenService : ITokenService
     {
       Subject = new ClaimsIdentity(claims, "Jwt"),
       Issuer = jwtIssuer,
-      Audience = _config["Jwt:Audience"] ?? jwtIssuer,
+      Audience = jwtAudience,
       NotBefore = nowUtc,
       Expires = nowUtc.AddMinutes(expireMinutes),
       SigningCredentials = new SigningCredentials(

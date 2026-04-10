@@ -9,11 +9,16 @@ public class RefreshTokenCommandHandler : IRequestHandler<RefreshTokenCommand, A
 {
     private readonly IUserRepository _userRepo;
     private readonly ITokenService _tokenService;
+    private readonly ICookieService _cookieService;
 
-    public RefreshTokenCommandHandler(IUserRepository userRepo, ITokenService tokenService)
+    public RefreshTokenCommandHandler(
+        IUserRepository userRepo, 
+        ITokenService tokenService, 
+        ICookieService cookieService)
     {
         _userRepo = userRepo;
         _tokenService = tokenService;
+        _cookieService = cookieService;
     }
     public async Task<AuthResponseDto> Handle(RefreshTokenCommand request, CancellationToken ct)
     {
@@ -37,7 +42,9 @@ public class RefreshTokenCommandHandler : IRequestHandler<RefreshTokenCommand, A
             + accessResult.ErrorMessage + "\n" 
             + refreshResult.ErrorMessage);
 
-        // TODO appand to the cookies (jwt and refreshToken)
+        var cookieResult = await _cookieService.AppendCookies(accessResult.Data!, refreshResult.Data!.UnhashedToken);
+        if (!cookieResult.IsSuccess)
+            throw new Exception(cookieResult.ErrorMessage);
 
         return new AuthResponseDto
         {

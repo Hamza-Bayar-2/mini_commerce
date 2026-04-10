@@ -11,12 +11,18 @@ public class RegisterCommandHandler : IRequestHandler<RegisterCommand, AuthRespo
   private readonly IUserRepository _userRepo;
   private readonly IRoleRepository _roleRepo;
   private readonly ITokenService _tokenService;
+  private readonly ICookieService _cookieService;
 
-  public RegisterCommandHandler(IUserRepository userRepo, IRoleRepository roleRepo, ITokenService tokenService)
+  public RegisterCommandHandler(
+    IUserRepository userRepo, 
+    IRoleRepository roleRepo, 
+    ITokenService tokenService,
+    ICookieService cookieService)
   {
     _userRepo = userRepo;
     _roleRepo = roleRepo;
     _tokenService = tokenService;
+    _cookieService = cookieService;
   }
 
   public async Task<AuthResponseDto> Handle(RegisterCommand request, CancellationToken ct)
@@ -55,7 +61,9 @@ public class RegisterCommandHandler : IRequestHandler<RegisterCommand, AuthRespo
       + accessResult.ErrorMessage + "\n"
       + refreshResult.ErrorMessage);
 
-    // TODO appand to the cookies (jwt and refreshToken)
+    var cookieResult = await _cookieService.AppendCookies(accessResult.Data!, refreshResult.Data!.UnhashedToken);
+    if (!cookieResult.IsSuccess)
+      throw new Exception(cookieResult.ErrorMessage);
 
     return new AuthResponseDto
     {
