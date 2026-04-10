@@ -22,6 +22,7 @@ public class AuthController : ControllerBase
     }
 
     [HttpPost("refresh")]
+    [Authorize]
     public async Task<IActionResult> Refresh(RefreshTokenCommand command)
     {
         return Ok(await _mediator.Send(command));
