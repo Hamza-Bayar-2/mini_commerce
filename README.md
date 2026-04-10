@@ -16,10 +16,20 @@ The project consists of the following microservices:
 
 ## Run Project
 
-To run the services, you can use the `dotnet run` command for each API project.
+To run the services, you must first ensure the database is running.
 
-### Running Individual Services
+### 🐳 Running the Database (Docker)
+1. **Create and start the SQL Server instance:**
+```bash
+docker run -e "ACCEPT_EULA=Y" -e "MSSQL_SA_PASSWORD=StrongPass123" -p 1433:1433 --name sqlserver_db -d mcr.microsoft.com/mssql/server:2022-latest
+```
 
+2. **Create the specific database (`AuthDb`):**
+```bash
+docker exec -it sqlserver_db /opt/mssql-tools18/bin/sqlcmd -S localhost -U sa -P StrongPass123 -C -Q "IF NOT EXISTS (SELECT name FROM sys.databases WHERE name = N'AuthDb') CREATE DATABASE AuthDb"
+```
+
+### 🚀 Running Individual Services
 Open a terminal for each service and run:
 
 ```bash
@@ -38,10 +48,10 @@ dotnet run --project src/Gateway/Gateway.API/Gateway.API.csproj
 
 ### Accessing Swagger
 Once the services are running, you can access the Swagger UI at:
-- **AuthService:** [http://localhost:5121/swagger](http://localhost:5121/swagger)
-- **ProductService:** [http://localhost:5056/swagger](http://localhost:5056/swagger)
-- **LogService:** [http://localhost:5243/swagger](http://localhost:5243/swagger)
-- **Gateway:** [http://localhost:5292/swagger](http://localhost:5292/swagger)
+- **AuthService:** [https://localhost:5121/swagger](https://localhost:5121/swagger)
+- **ProductService:** [https://localhost:5056/swagger](https://localhost:5056/swagger)
+- **LogService:** [https://localhost:5243/swagger](https://localhost:5243/swagger)
+- **Gateway:** [https://localhost:5292/swagger](https://localhost:5292/swagger)
 
 ## Useful Commands
 
