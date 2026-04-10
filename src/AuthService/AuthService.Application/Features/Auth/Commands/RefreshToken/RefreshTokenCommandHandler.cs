@@ -35,7 +35,7 @@ public class RefreshTokenCommandHandler : IRequestHandler<RefreshTokenCommand, A
             throw new Exception("User not found in the data base");
 
         var accessResult = await _tokenService.GenerateAccessTokenAsync(user, [.. user.Roles.Select(r => r.Name)], ct);
-        var refreshResult = await _tokenService.GenerateRefreshTokenAsync(user.Id, null, now, ct);
+        var refreshResult = await _tokenService.GenerateRefreshTokenAsync(user.Id, validationResult.Data.Id, now, ct);
 
         if (!accessResult.IsSuccess || !refreshResult.IsSuccess)
             throw new Exception("Token generation failed." 

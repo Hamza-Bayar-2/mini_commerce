@@ -68,11 +68,11 @@ public class CookieService : ICookieService
       Path = "/"
     };
     
-    var cookieDomain = _config["Cookie:Domain"];
-    if (!string.IsNullOrWhiteSpace(cookieDomain))
-    {
-      options.Domain = cookieDomain;
-    }
+    // var cookieDomain = _config["Cookie:Domain"];
+    // if (!string.IsNullOrWhiteSpace(cookieDomain))
+    // {
+    //   options.Domain = cookieDomain;
+    // }
 
     return options;
   }
