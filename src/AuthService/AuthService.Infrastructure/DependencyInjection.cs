@@ -16,10 +16,12 @@ public static class DependencyInjection
         this IServiceCollection services,
         string? connectionString)
     {
+        services.AddHttpContextAccessor();
         services.AddDbContext<AppDbContext>(opt => opt.UseSqlServer(connectionString));
 
         services.AddScoped<IUnitOfWork, UnitOfWork>();
         services.AddScoped<ITokenService, TokenService>();
+        services.AddScoped<ICookieService, CookieService>();
         services.AddScoped<IUserRepository, UserRepository>();
         services.AddScoped<IRoleRepository, RoleRepository>();
         services.AddScoped<IRefreshTokenRepository, RefreshTokenRepository>();
