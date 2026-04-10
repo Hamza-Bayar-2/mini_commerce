@@ -24,47 +24,46 @@ public class TokenService : ITokenService
 
   public async Task<Result<string>> GenerateAccessTokenAsync(User userObj, IList<string> roles, CancellationToken ct = default)
   {
-    if (userObj is not User user)
-    {
-      return Result<string>.Failure("User object is not of type User: " + nameof(userObj));
-    }
+    if (userObj == null)
+      return Result<string>.Failure("User object cannot be null.");
 
-    // TODO buraya bir validator ekle
-    var jwtKey = _config["Jwt:Key"] ?? "ThisIsASecretKeyForDevOnly!ChangeIt";
-    var jwtIssuer = _config["Jwt:Issuer"] ?? "fxaret.local";
+    // Yapılandırma değerlerini güvenli oku
+    var jwtKey = _config["Jwt:Key"] ?? throw new InvalidOperationException("JWT Key is missing in configuration.");
+    var jwtIssuer = _config["Jwt:Issuer"] ?? "mini_commerce.auth";
     var expireMinutes = int.Parse(_config["Jwt:ExpireMinutes"] ?? "15");
 
-    var tokenHandler = new JwtSecurityTokenHandler();
     var key = Encoding.UTF8.GetBytes(jwtKey);
-
     var nowUtc = DateTime.UtcNow;
-    var expiresUtc = nowUtc.AddMinutes(expireMinutes);
 
     var claims = new List<Claim>
-      {
-        new(JwtRegisteredClaimNames.Sub, user.Id.ToString()),
-        new(ClaimTypes.NameIdentifier, user.Id.ToString()),
-        new(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString()),
-        new(JwtRegisteredClaimNames.Iat, new DateTimeOffset(nowUtc).ToUnixTimeSeconds().ToString(), ClaimValueTypes.Integer64)
-      };
+    {
+      new(JwtRegisteredClaimNames.Sub, userObj.Id.ToString()),
+      new(JwtRegisteredClaimNames.Email, userObj.Email), // Email eklemek frontend için kolaylık sağlar
+      new(ClaimTypes.NameIdentifier, userObj.Id.ToString()),
+      new(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString()),
+      new(JwtRegisteredClaimNames.Iat, new DateTimeOffset(nowUtc).ToUnixTimeSeconds().ToString(), ClaimValueTypes.Integer64)
+    };
 
     foreach (var role in roles)
     {
-      claims.Add(new(ClaimTypes.Role, role));
+      claims.Add(new Claim(ClaimTypes.Role, role));
     }
 
     var tokenDescriptor = new SecurityTokenDescriptor
     {
-      Subject = new ClaimsIdentity(claims),
+      Subject = new ClaimsIdentity(claims, "Jwt"),
       Issuer = jwtIssuer,
+      Audience = _config["Jwt:Audience"] ?? jwtIssuer,
       NotBefore = nowUtc,
-      Expires = expiresUtc,
+      Expires = nowUtc.AddMinutes(expireMinutes),
       SigningCredentials = new SigningCredentials(
             new SymmetricSecurityKey(key),
             SecurityAlgorithms.HmacSha256Signature)
     };
 
+    var tokenHandler = new JwtSecurityTokenHandler();
     var token = tokenHandler.CreateToken(tokenDescriptor);
+
     return Result<string>.Success(tokenHandler.WriteToken(token));
   }
 
@@ -128,8 +127,12 @@ public class TokenService : ITokenService
     return Result<UserRefreshToken>.Success(existingRefreshToken);
   }
 
-  public Task<Result<bool>> VerifyToken(string token, string hash)
+  public async Task<Result<bool>> VerifyToken(string token, string hash)
   {
-    throw new NotImplementedException();
+    var hashResult = await HashToken(token);
+    if (!hashResult.IsSuccess)
+      return Result<bool>.Failure(hashResult.ErrorMessage!);
+
+    return Result<bool>.Success(hashResult.Data == hash);
   }
 }
