@@ -1,5 +1,5 @@
 using AuthService.Application.DTOs;
-using AuthService.Application.Interfaces;
+using AuthService.Application.Interfaces.Services;
 using AuthService.Application.Interfaces.Repositories;
 using AuthService.Domain.Entities;
 using MediatR;

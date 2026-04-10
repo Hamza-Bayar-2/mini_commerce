@@ -3,7 +3,7 @@ using System.Security.Claims;
 using System.Security.Cryptography;
 using System.Text;
 using AuthService.Application.Common.Models;
-using AuthService.Application.Interfaces;
+using AuthService.Application.Interfaces.Services;
 using AuthService.Application.Interfaces.Repositories;
 using AuthService.Domain.Entities;
 using Microsoft.Extensions.Configuration;
@@ -38,7 +38,7 @@ public class TokenService : ITokenService
     var claims = new List<Claim>
     {
       new(JwtRegisteredClaimNames.Sub, userObj.Id.ToString()),
-      new(JwtRegisteredClaimNames.Email, userObj.Email), // Email eklemek frontend için kolaylık sağlar
+      new(JwtRegisteredClaimNames.Email, userObj.Email),
       new(ClaimTypes.NameIdentifier, userObj.Id.ToString()),
       new(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString()),
       new(JwtRegisteredClaimNames.Iat, new DateTimeOffset(nowUtc).ToUnixTimeSeconds().ToString(), ClaimValueTypes.Integer64)
@@ -62,9 +62,9 @@ public class TokenService : ITokenService
     };
 
     var tokenHandler = new JwtSecurityTokenHandler();
-    var token = tokenHandler.CreateToken(tokenDescriptor);
+    var accessToken = tokenHandler.CreateToken(tokenDescriptor);
 
-    return Result<string>.Success(tokenHandler.WriteToken(token));
+    return Result<string>.Success(tokenHandler.WriteToken(accessToken));
   }
 
   public async Task<Result<(UserRefreshToken Entity, string UnhashedToken)>> GenerateRefreshTokenAsync(Guid userId, Guid? oldTokenId, DateTime now, CancellationToken ct = default)

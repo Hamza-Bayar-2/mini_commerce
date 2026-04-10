@@ -1,7 +1,7 @@
 using AuthService.Application.Common.Models;
 using AuthService.Domain.Entities;
 
-namespace AuthService.Application.Interfaces;
+namespace AuthService.Application.Interfaces.Services;
 
 public interface ITokenService
 {

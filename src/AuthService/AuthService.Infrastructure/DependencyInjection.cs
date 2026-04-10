@@ -1,5 +1,6 @@
 using AuthService.Application.Interfaces;
 using AuthService.Application.Interfaces.Repositories;
+using AuthService.Application.Interfaces.Services;
 using AuthService.Infrastructure.Persistence;
 using AuthService.Infrastructure.Persistence.Context;
 using AuthService.Infrastructure.Persistence.Repositories;
