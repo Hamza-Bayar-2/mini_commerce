@@ -1,6 +1,8 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
+using ProductService.Application.Interfaces;
 using ProductService.Application.Interfaces.Repositories;
+using ProductService.Infrastructure.Persistence;
 using ProductService.Infrastructure.Persistence.Context;
 using ProductService.Infrastructure.Persistence.Repositories;
 
@@ -17,6 +19,7 @@ public static class DependencyInjection
 
         services.AddScoped<IProductRepository, ProductRepository>();
         services.AddScoped<IProductStatusRepository, ProductStatusRepository>();
+        services.AddScoped<IUnitOfWork, UnitOfWork>();
 
         return services;
     }
