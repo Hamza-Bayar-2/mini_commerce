@@ -4,6 +4,7 @@ using AuthService.Application.Interfaces.Repositories;
 using AuthService.Domain.Entities;
 using MediatR;
 using AuthService.Application.Common.Models;
+using AuthService.Domain.Enums;
 
 namespace AuthService.Application.Features.Auth.Commands.Register;
 
@@ -34,7 +35,7 @@ public class RegisterCommandHandler : IRequestHandler<RegisterCommand, Result<Au
 
     var now = DateTime.UtcNow;
 
-    var roles = await _roleRepo.GetRolesByNamesAsync(["customer"], ct);
+    var roles = await _roleRepo.GetRolesByIdsAsync([(short)Roles.CUSTOMER], ct);
 
     var user = new User
     {

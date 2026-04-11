@@ -1,4 +1,5 @@
 using AuthService.Domain.Entities;
+using AuthService.Domain.Enums;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
@@ -21,10 +22,10 @@ public sealed class RoleConfiguration : IEntityTypeConfiguration<Role>
             .HasColumnName("name");
 
         builder.HasData(
-            new Role { Id = 1, Name = "customer" },
-            new Role { Id = 2, Name = "seller" },
-            new Role { Id = 3, Name = "admin" },
-            new Role { Id = 4, Name = "editor" }
+            new Role { Id = (short)Roles.CUSTOMER, Name = Roles.CUSTOMER.ToString() },
+            new Role { Id = (short)Roles.SELLER, Name = Roles.SELLER.ToString() },
+            new Role { Id = (short)Roles.ADMIN, Name = Roles.ADMIN.ToString() },
+            new Role { Id = (short)Roles.EDITOR, Name = Roles.EDITOR.ToString() }
         );
     }
 }
