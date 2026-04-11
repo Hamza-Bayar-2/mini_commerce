@@ -66,3 +66,38 @@ Records user_refresh_tokens(id, user_id, token_hash, expires_at, is_revoked, rep
   101, 1, 'token1', '2026-05-08', false, null, null, null
   102, 2, 'token2', '2026-05-08', false, null, null, null
 }
+
+/// ========> Ürün <========
+
+Table products {
+  id uuid [pk, default: `gen_random_uuid()`]
+  status_id smallint [not null]
+  name varchar(255) [not null]
+  description text
+  stock int [not null]
+  created_at timestamp [default: `now()`]
+  updated_at timestamp
+  deleted_at timestamp
+}
+Ref: product_statuses.id < products.status_id [update: restrict, delete: restrict]
+
+Table product_statuses {
+  id smallint [pk]
+  name varchar(30) [unique, not null]
+  description text
+}
+
+Records product_statuses(id, name, description) {
+  1, 'ACTIVE', 'Product is available for sale'
+  2, 'INACTIVE', 'Product is not available'
+  3, 'DRAFT', 'Product is being edited'
+  4, 'BANNED', 'Product is prohibited'
+  5, 'OUT_OF_STOCK', 'Product is currently out of stock'
+}
+
+Records products(id, status_id, name, description, stock, created_at, updated_at, deleted_at) {
+  1, 1, 'iPhone 15 Pro', '128GB Blue Titanium', 500, '2026-05-08', null, null
+  2, 1, 'Galaxy S24 Ultra', 'Titanium Black 512GB', 33300, '2026-05-08', null, null
+  3, 5, 'MacBook Air M2', '8GB RAM 256GB SSD', 23445, '2026-05-08', null, null
+}
+

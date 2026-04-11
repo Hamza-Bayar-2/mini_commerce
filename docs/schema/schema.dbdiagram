@@ -33,6 +33,18 @@
       "schemaName": "public",
       "x": 417.5785717432186,
       "y": -25.687155594077126
+    },
+    {
+      "name": "products",
+      "schemaName": "public",
+      "x": -428.75109705737725,
+      "y": -412.95531745965843
+    },
+    {
+      "name": "product_statuses",
+      "schemaName": "public",
+      "x": -422.25109705737725,
+      "y": -104.79859002237151
     }
   ],
   "tableGroupCollapseStates": [],
