@@ -14,7 +14,7 @@ public class ProductConfiguration : IEntityTypeConfiguration<Product>
 
         builder.Property(p => p.Id)
             .HasColumnName("id")
-            .HasDefaultValueSql("gen_random_uuid()");
+            .HasDefaultValueSql("NEWID()");
 
         builder.Property(p => p.StatusId)
             .HasColumnName("status_id")
@@ -35,16 +35,16 @@ public class ProductConfiguration : IEntityTypeConfiguration<Product>
 
         builder.Property(p => p.CreatedAt)
             .HasColumnName("created_at")
-            .HasColumnType("timestamp without time zone")
-            .HasDefaultValueSql("now()");
+            .HasColumnType("datetime2")
+            .HasDefaultValueSql("GETUTCDATE()");
 
         builder.Property(p => p.UpdatedAt)
             .HasColumnName("updated_at")
-            .HasColumnType("timestamp without time zone");
+            .HasColumnType("datetime2");
 
         builder.Property(p => p.DeletedAt)
             .HasColumnName("deleted_at")
-            .HasColumnType("timestamp without time zone");
+            .HasColumnType("datetime2");
 
         builder.HasOne(p => p.Status)
             .WithMany(ps => ps.Products)
