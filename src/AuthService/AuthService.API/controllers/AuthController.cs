@@ -21,28 +21,43 @@ public class AuthController : ControllerBase
     [AllowAnonymous]
     public async Task<IActionResult> RegisterAsync(RegisterCommand command)
     {
-        return Ok(await _mediator.Send(command));
+        var registerResult = await _mediator.Send(command);
+        if (!registerResult.IsSuccess)
+            return BadRequest(new { Error = registerResult.ErrorMessage });
+
+        return Ok(registerResult.Data);
     }
 
     [HttpPost("login")]
     [AllowAnonymous]
     public async Task<IActionResult> LoginAsync(LoginCommand command)
     {
-        return Ok(await _mediator.Send(command));
+        var result = await _mediator.Send(command);
+        if (!result.IsSuccess)
+            return Unauthorized(new { Error = result.ErrorMessage });
+
+        return Ok(result.Data);
     }
 
     [HttpPost("refresh")]
     [Authorize]
     public async Task<IActionResult> Refresh(RefreshTokenCommand command)
     {
-        return Ok(await _mediator.Send(command));
+        var result = await _mediator.Send(command);
+        if (!result.IsSuccess)
+            return Unauthorized(new { Error = result.ErrorMessage });
+
+        return Ok(result.Data);
     }
 
     [HttpPost("logout")]
     [Authorize]
     public async Task<IActionResult> Logout()
     {
-        await _mediator.Send(new LogoutCommand());
+        var result = await _mediator.Send(new LogoutCommand());
+        if (!result.IsSuccess)
+            return BadRequest(new { Error = result.ErrorMessage });
+
         return NoContent();
     }
 
@@ -50,6 +65,10 @@ public class AuthController : ControllerBase
     [Authorize]
     public async Task<IActionResult> GetUserInfo()
     {
-        return Ok(await _mediator.Send(new GetUserInfoQuery()));
+        var result = await _mediator.Send(new GetUserInfoQuery());
+        if (!result.IsSuccess)
+            return NotFound(new { Error = result.ErrorMessage });
+
+        return Ok(result.Data);
     }
 }

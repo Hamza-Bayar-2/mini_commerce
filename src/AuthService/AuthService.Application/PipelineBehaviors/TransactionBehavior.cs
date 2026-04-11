@@ -24,6 +24,14 @@ public class TransactionBehavior<TRequest, TResponse>
         try
         {
             var response = await next(ct);
+
+            // Check if response is a Result type and represents a failure
+            if (response is IResult result && !result.IsSuccess)
+            {
+                await _unitOfWork.RollbackTransactionAsync(ct);
+                return response;
+            }
+
             await _unitOfWork.SaveChangesAsync(ct);
             await _unitOfWork.CommitTransactionAsync(ct);
             return response;

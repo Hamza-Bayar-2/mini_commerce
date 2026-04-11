@@ -1,10 +1,11 @@
+using AuthService.Application.Common.Models;
 using AuthService.Application.Interfaces.Repositories;
 using AuthService.Application.Interfaces.Services;
 using MediatR;
 
 namespace AuthService.Application.Features.Auth.Commands.Logout;
 
-public class LogoutCommandHandler : IRequestHandler<LogoutCommand, Unit>
+public class LogoutCommandHandler : IRequestHandler<LogoutCommand, Result<Unit>>
 {
     private readonly ICookieService _cookieService;
     private readonly ITokenService _tokenService;
@@ -20,7 +21,7 @@ public class LogoutCommandHandler : IRequestHandler<LogoutCommand, Unit>
         _refreshTokenRepo = refreshTokenRepo;
     }
 
-    public async Task<Unit> Handle(LogoutCommand request, CancellationToken ct)
+    public async Task<Result<Unit>> Handle(LogoutCommand request, CancellationToken ct)
     {
         // 1. Get refresh token from cookie and revoke it in DB
         var refreshToken = _cookieService.GetRefreshToken();
@@ -39,8 +40,8 @@ public class LogoutCommandHandler : IRequestHandler<LogoutCommand, Unit>
         var result = await _cookieService.DeleteCookies();
         
         if (!result.IsSuccess)
-            throw new Exception(result.ErrorMessage);
+            return Result<Unit>.Failure(result.ErrorMessage!);
 
-        return Unit.Value;
+        return Result<Unit>.Success(Unit.Value);
     }
 }

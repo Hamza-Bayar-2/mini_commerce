@@ -1,3 +1,4 @@
+using AuthService.Application.Interfaces;
 using FluentValidation;
 using MediatR;
 
@@ -32,6 +33,18 @@ public class ValidationBehavior<TRequest, TResponse> : IPipelineBehavior<TReques
 
     if (failures.Any())
     {
+      if (typeof(IResult).IsAssignableFrom(typeof(TResponse)))
+      {
+        var errorMessage = string.Join(", ", failures.Select(f => f.ErrorMessage));
+
+        // Result<T>.Failure metodunu çağırıyoruz
+        var failureMethod = typeof(TResponse).GetMethod("Failure");
+        if (failureMethod != null)
+        {
+          return (TResponse)failureMethod.Invoke(null, [errorMessage])!;
+        }
+      }
+
       throw new ValidationException(failures);
     }
 

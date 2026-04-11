@@ -1,3 +1,4 @@
+using AuthService.Application.Common.Models;
 using AuthService.Application.DTOs;
 using AuthService.Application.Interfaces;
 
@@ -9,4 +10,4 @@ public record RegisterCommand(
     string Email,
     string Password,
     string ConfirmPassword,
-    string? PhoneNumber) : ICommand<AuthResponseDto>;
+    string? PhoneNumber) : ICommand<Result<AuthResponseDto>>;

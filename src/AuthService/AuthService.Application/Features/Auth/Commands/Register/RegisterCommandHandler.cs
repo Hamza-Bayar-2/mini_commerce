@@ -3,10 +3,11 @@ using AuthService.Application.Interfaces.Services;
 using AuthService.Application.Interfaces.Repositories;
 using AuthService.Domain.Entities;
 using MediatR;
+using AuthService.Application.Common.Models;
 
 namespace AuthService.Application.Features.Auth.Commands.Register;
 
-public class RegisterCommandHandler : IRequestHandler<RegisterCommand, AuthResponseDto>
+public class RegisterCommandHandler : IRequestHandler<RegisterCommand, Result<AuthResponseDto>>
 {
   private readonly IUserRepository _userRepo;
   private readonly IRoleRepository _roleRepo;
@@ -14,8 +15,8 @@ public class RegisterCommandHandler : IRequestHandler<RegisterCommand, AuthRespo
   private readonly ICookieService _cookieService;
 
   public RegisterCommandHandler(
-    IUserRepository userRepo, 
-    IRoleRepository roleRepo, 
+    IUserRepository userRepo,
+    IRoleRepository roleRepo,
     ITokenService tokenService,
     ICookieService cookieService)
   {
@@ -25,11 +26,11 @@ public class RegisterCommandHandler : IRequestHandler<RegisterCommand, AuthRespo
     _cookieService = cookieService;
   }
 
-  public async Task<AuthResponseDto> Handle(RegisterCommand request, CancellationToken ct)
+  public async Task<Result<AuthResponseDto>> Handle(RegisterCommand request, CancellationToken ct)
   {
     var existing = await _userRepo.GetByEmailAsync(request.Email, ct);
     if (existing is not null)
-      throw new Exception("Email already exists.");
+      return Result<AuthResponseDto>.Failure("Email already exists.");
 
     var now = DateTime.UtcNow;
 
@@ -57,19 +58,19 @@ public class RegisterCommandHandler : IRequestHandler<RegisterCommand, AuthRespo
     var refreshResult = await _tokenService.GenerateRefreshTokenAsync(user.Id, null, now, ct);
 
     if (!accessResult.IsSuccess || !refreshResult.IsSuccess)
-      throw new Exception("Token generation failed."
+      return Result<AuthResponseDto>.Failure("Token generation failed."
       + accessResult.ErrorMessage + "\n"
       + refreshResult.ErrorMessage);
 
     var cookieResult = await _cookieService.AppendCookies(accessResult.Data!, refreshResult.Data!.UnhashedToken);
     if (!cookieResult.IsSuccess)
-      throw new Exception(cookieResult.ErrorMessage);
+      return Result<AuthResponseDto>.Failure(cookieResult.ErrorMessage!);
 
-    return new AuthResponseDto
+    return Result<AuthResponseDto>.Success(new AuthResponseDto
     {
       AccessToken = accessResult.Data!,
       RefreshToken = refreshResult.Data!.UnhashedToken,
       RefreshTokenExpiresAt = refreshResult.Data!.Entity.ExpiresAt
-    };
+    });
   }
 }
