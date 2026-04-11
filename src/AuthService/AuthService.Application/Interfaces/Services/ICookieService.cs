@@ -8,4 +8,5 @@ public interface ICookieService
 {
     Task<Result<Unit>> AppendCookies(string jwt, string refreshToken);
     Task<Result<Unit>> DeleteCookies();
+    string? GetRefreshToken();
 }

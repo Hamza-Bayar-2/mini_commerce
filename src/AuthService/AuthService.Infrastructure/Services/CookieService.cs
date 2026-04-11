@@ -57,6 +57,11 @@ public class CookieService : ICookieService
     }
   }
 
+  public string? GetRefreshToken()
+  {
+    return _httpContextAccessor.HttpContext?.Request.Cookies["refreshToken"];
+  }
+
   private CookieOptions CreateCookieOptions(TimeSpan? maxAge = null)
   {
     var options = new CookieOptions

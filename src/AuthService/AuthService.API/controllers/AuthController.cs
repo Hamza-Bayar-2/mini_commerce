@@ -1,3 +1,5 @@
+using AuthService.Application.Features.Auth.Commands.Login;
+using AuthService.Application.Features.Auth.Commands.Logout;
 using AuthService.Application.Features.Auth.Commands.RefreshToken;
 using AuthService.Application.Features.Auth.Commands.Register;
 using MediatR;
@@ -21,10 +23,25 @@ public class AuthController : ControllerBase
         return Ok(await _mediator.Send(command));
     }
 
+    [HttpPost("login")]
+    [AllowAnonymous]
+    public async Task<IActionResult> LoginAsync(LoginCommand command)
+    {
+        return Ok(await _mediator.Send(command));
+    }
+
     [HttpPost("refresh")]
     [Authorize]
     public async Task<IActionResult> Refresh(RefreshTokenCommand command)
     {
         return Ok(await _mediator.Send(command));
+    }
+
+    [HttpPost("logout")]
+    [Authorize]
+    public async Task<IActionResult> Logout()
+    {
+        await _mediator.Send(new LogoutCommand());
+        return NoContent();
     }
 }
