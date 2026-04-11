@@ -2,6 +2,7 @@ using AuthService.Application.Features.Auth.Commands.Login;
 using AuthService.Application.Features.Auth.Commands.Logout;
 using AuthService.Application.Features.Auth.Commands.RefreshToken;
 using AuthService.Application.Features.Auth.Commands.Register;
+using AuthService.Application.Features.Auth.Queries.GetUserInfo;
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -43,5 +44,12 @@ public class AuthController : ControllerBase
     {
         await _mediator.Send(new LogoutCommand());
         return NoContent();
+    }
+
+    [HttpGet("user-info")]
+    [Authorize]
+    public async Task<IActionResult> GetUserInfo()
+    {
+        return Ok(await _mediator.Send(new GetUserInfoQuery()));
     }
 }

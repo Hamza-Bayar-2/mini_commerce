@@ -62,6 +62,12 @@ public class CookieService : ICookieService
     return _httpContextAccessor.HttpContext?.Request.Cookies["refreshToken"];
   }
 
+  public Guid? GetUserId()
+  {
+      var userIdClaim = _httpContextAccessor.HttpContext?.User?.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
+      return Guid.TryParse(userIdClaim, out var userId) ? userId : null;
+  }
+
   private CookieOptions CreateCookieOptions(TimeSpan? maxAge = null)
   {
     var options = new CookieOptions
