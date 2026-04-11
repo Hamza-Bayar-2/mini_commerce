@@ -1,4 +1,5 @@
-using ProductService.Infrastructure; // ProductService için olanı kullan
+using ProductService.Infrastructure;
+using ProductService.Application;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
@@ -54,7 +55,7 @@ builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
 // ProductService kütüphanelerini çağırıyoruz
-// builder.Services.AddApplication(); 
+builder.Services.AddApplication();
 builder.Services.AddInfrastructure(builder.Configuration.GetConnectionString("Default"));
 
 var app = builder.Build();

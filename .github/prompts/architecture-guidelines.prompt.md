@@ -63,3 +63,4 @@ We use **FluentValidation** integrated with MediatR behavior (`ValidationBehavio
 4.  **Inject Dependencies:** Inject your desired domain Repositories and external Services into the handler. Do not inject `AppDbContext` directly.
 5.  **Execute Logic:** Use repository methods like `AddAsync` or `Update` to mutate state. Do **not** call arbitrary save methods.
 6.  **Dependency Injection (DI):** If you create a new Service or Repository, remember to register it in `DependencyInjection.cs` (e.g., `services.AddScoped<INewRepo, NewRepo>()`) under the respective layer (Application vs Infrastructure).
+7.  **DI Coding Pattern:** When injecting dependencies into Handlers or Services, you MUST use `private readonly` fields with an underscore prefix (e.g., `_userRepo`) and initialize them via a classic constructor. Do NOT use C# 12 Primary Constructors for dependency injection.

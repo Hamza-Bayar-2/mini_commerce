@@ -11,6 +11,12 @@ namespace ProductService.Infrastructure.Persistence.Repositories
 
         public ProductStatusRepository(AppDbContext db) : base(db) => _db = db;
 
+        public async Task<ProductStatus?> GetByIdAsync(short id, CancellationToken ct = default)
+        {
+            return await _db.ProductStatuses.
+                FirstOrDefaultAsync(s => id == s.Id, ct);
+        }
+
         public async Task<ProductStatus?> GetStatusByNamesAsync(string statusName, CancellationToken ct = default)
         {
             return await _db.ProductStatuses
