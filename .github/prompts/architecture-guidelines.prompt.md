@@ -21,6 +21,7 @@ To ensure data consistency and integrity, direct calls to `SaveChangesAsync()` f
 *   **Automatic Commits (Pipeline Behavior):** We use a MediatR pipeline behavior called `TransactionBehavior`. It automatically wraps any incoming Command inside a database transaction:
     *   It begins a transaction via `IUnitOfWork`.
     *   If the command handler runs successfully (all validations pass, all logic succeeds), it automatically calls `CommitTransactionAsync` which calls `SaveChangesAsync`.
+    *   **CRITICAL RULE:** For the `TransactionBehavior` to intercept your request, the request MUST implement the `ICommand` (or `ICommand<TResponse>`) interface. If you forget this, `SaveChangesAsync` will NOT be called, and your changes will not be persisted.
     *   If an exception occurs anywhere in the pipeline or handler, the behavior catches it and safely issues a `RollbackTransactionAsync`.
 
 ### What Does This Mean For You?

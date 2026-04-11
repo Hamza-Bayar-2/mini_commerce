@@ -111,3 +111,13 @@ dotnet add SERVICE_NAME.API/SERVICE_NAME.API.csproj package Swashbuckle.AspNetCo
 - **API Layer:** Use only `Application` types in your Controllers. Use `Infrastructure` only in `Program.cs` for Dependency Injection.
 - **Interfaces:** Always define your repository and service interfaces in the `Application` layer.
 - **Entities:** Keep them pure in the `Domain` layer, away from any ORM-specific logic if possible.
+
+---
+
+## Important Rules & Gotchas
+
+### MediatR & Transactions
+- **Pipeline Behavior:** We use a `TransactionBehavior` to automate `SaveChangesAsync` and database transactions.
+- **ICommand Interface:** For a command to be included in a transaction, its `IRequest` must also implement the `ICommand` (or `ICommand<T>`) interface.
+- **Why?** The pipeline filters requests. If you forget to implement `ICommand`, your changes (like adding a Refresh Token to the DB) will NOT be saved because `SaveChangesAsync` won't be called automatically.
+- **Rule:** Always double-check that your Command records implement the internal `ICommand` interface.
