@@ -48,7 +48,11 @@ builder.Services.AddAuthentication(options =>
     };
 });
 
-builder.Services.AddAuthorization();
+builder.Services.AddAuthorization(options =>
+{
+    options.AddPolicy("SellerOrAdmin", policy =>
+        policy.RequireRole("seller", "admin"));
+});
 
 builder.Services.AddOpenApi();
 builder.Services.AddEndpointsApiExplorer();
