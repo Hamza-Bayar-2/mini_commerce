@@ -35,7 +35,7 @@ public class LoginCommandHandler : IRequestHandler<LoginCommand, Result<AuthResp
             return Result<AuthResponseDto>.Failure("Invalid email or password.");
 
         var now = DateTime.UtcNow;
-        
+
         // Generate tokens
         var roles = user.Roles.Select(r => r.Name).ToList();
         var accessTokenResult = await _tokenService.GenerateAccessTokenAsync(user, roles, ct);

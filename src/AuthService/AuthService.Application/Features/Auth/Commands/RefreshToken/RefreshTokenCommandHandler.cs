@@ -13,8 +13,8 @@ public class RefreshTokenCommandHandler : IRequestHandler<RefreshTokenCommand, R
     private readonly ICookieService _cookieService;
 
     public RefreshTokenCommandHandler(
-        IUserRepository userRepo, 
-        ITokenService tokenService, 
+        IUserRepository userRepo,
+        ITokenService tokenService,
         ICookieService cookieService)
     {
         _userRepo = userRepo;
@@ -39,8 +39,8 @@ public class RefreshTokenCommandHandler : IRequestHandler<RefreshTokenCommand, R
         var refreshResult = await _tokenService.GenerateRefreshTokenAsync(user.Id, validationResult.Data.Id, now, ct);
 
         if (!accessResult.IsSuccess || !refreshResult.IsSuccess)
-            return Result<AuthResponseDto>.Failure("Token generation failed." 
-            + accessResult.ErrorMessage + "\n" 
+            return Result<AuthResponseDto>.Failure("Token generation failed."
+            + accessResult.ErrorMessage + "\n"
             + refreshResult.ErrorMessage);
 
         var cookieResult = await _cookieService.AppendCookies(accessResult.Data!, refreshResult.Data!.UnhashedToken);

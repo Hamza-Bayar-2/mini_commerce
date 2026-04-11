@@ -17,9 +17,9 @@ public class TransactionBehavior<TRequest, TResponse>
         CancellationToken ct)
     {
         // Query'leri atla, sadece Command'lere uygula
-        if(request is not ICommand<TResponse>)
+        if (request is not ICommand<TResponse>)
             return await next(ct);
-        
+
         await _unitOfWork.BeginTransactionAsync(ct);
         try
         {

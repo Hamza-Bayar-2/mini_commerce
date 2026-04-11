@@ -25,14 +25,14 @@ public class UnitOfWork : IUnitOfWork
         {
             throw new InvalidOperationException("A transaction is already in progress.");
         }
-        
+
         _currentTransaction = await _db.Database.BeginTransactionAsync(ct);
     }
 
     public async Task CommitTransactionAsync(CancellationToken ct = default)
     {
         try
-        {            
+        {
             if (_currentTransaction != null)
             {
                 await _currentTransaction.CommitAsync(ct);

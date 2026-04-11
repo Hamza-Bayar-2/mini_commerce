@@ -8,83 +8,83 @@ namespace AuthService.Infrastructure.Services;
 
 public class CookieService : ICookieService
 {
-  public CookieService(IHttpContextAccessor httpContextAccessor, IConfiguration config)
-  {
-    _httpContextAccessor = httpContextAccessor;
-    _config = config;
-  }
-
-  private readonly IHttpContextAccessor _httpContextAccessor;
-  private readonly IConfiguration _config;
-
-  public async Task<Result<Unit>> AppendCookies(string jwt, string refreshToken)
-  {
-    try
+    public CookieService(IHttpContextAccessor httpContextAccessor, IConfiguration config)
     {
-      var expireMinutes = int.Parse(_config["JwtSettings:ExpireMinutes"] ?? "15");
-
-      var context = _httpContextAccessor.HttpContext;
-      if (context == null)
-        return Result<Unit>.Failure("HttpContext could not found");
-
-      context.Response.Cookies.Append("credential", jwt, CreateCookieOptions(TimeSpan.FromMinutes(expireMinutes)));
-      context.Response.Cookies.Append("refreshToken", refreshToken, CreateCookieOptions(TimeSpan.FromDays(14)));
-
-      return Result<Unit>.Success(Unit.Value);
+        _httpContextAccessor = httpContextAccessor;
+        _config = config;
     }
-    catch (Exception ex)
+
+    private readonly IHttpContextAccessor _httpContextAccessor;
+    private readonly IConfiguration _config;
+
+    public async Task<Result<Unit>> AppendCookies(string jwt, string refreshToken)
     {
-      return Result<Unit>.Failure($"Cookie append failed: {ex.Message}");
+        try
+        {
+            var expireMinutes = int.Parse(_config["JwtSettings:ExpireMinutes"] ?? "15");
+
+            var context = _httpContextAccessor.HttpContext;
+            if (context == null)
+                return Result<Unit>.Failure("HttpContext could not found");
+
+            context.Response.Cookies.Append("credential", jwt, CreateCookieOptions(TimeSpan.FromMinutes(expireMinutes)));
+            context.Response.Cookies.Append("refreshToken", refreshToken, CreateCookieOptions(TimeSpan.FromDays(14)));
+
+            return Result<Unit>.Success(Unit.Value);
+        }
+        catch (Exception ex)
+        {
+            return Result<Unit>.Failure($"Cookie append failed: {ex.Message}");
+        }
     }
-  }
 
-  public async Task<Result<Unit>> DeleteCookies()
-  {
-    try
+    public async Task<Result<Unit>> DeleteCookies()
     {
-      var context = _httpContextAccessor.HttpContext;
-      if (context == null)
-        return Result<Unit>.Failure("HttpContext could not found");
+        try
+        {
+            var context = _httpContextAccessor.HttpContext;
+            if (context == null)
+                return Result<Unit>.Failure("HttpContext could not found");
 
-      context.Response.Cookies.Delete("credential", CreateCookieOptions());
-      context.Response.Cookies.Delete("refreshToken", CreateCookieOptions());
+            context.Response.Cookies.Delete("credential", CreateCookieOptions());
+            context.Response.Cookies.Delete("refreshToken", CreateCookieOptions());
 
-      return Result<Unit>.Success(Unit.Value);
+            return Result<Unit>.Success(Unit.Value);
+        }
+        catch (Exception ex)
+        {
+            return Result<Unit>.Failure($"Cookie deletion error: {ex.Message}");
+        }
     }
-    catch (Exception ex)
+
+    public string? GetRefreshToken()
     {
-      return Result<Unit>.Failure($"Cookie deletion error: {ex.Message}");
+        return _httpContextAccessor.HttpContext?.Request.Cookies["refreshToken"];
     }
-  }
 
-  public string? GetRefreshToken()
-  {
-    return _httpContextAccessor.HttpContext?.Request.Cookies["refreshToken"];
-  }
-
-  public Guid? GetUserId()
-  {
-      var userIdClaim = _httpContextAccessor.HttpContext?.User?.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
-      return Guid.TryParse(userIdClaim, out var userId) ? userId : null;
-  }
-
-  private CookieOptions CreateCookieOptions(TimeSpan? maxAge = null)
-  {
-    var options = new CookieOptions
+    public Guid? GetUserId()
     {
-      HttpOnly = true,
-      Secure = true,
-      SameSite = SameSiteMode.Strict,
-      MaxAge = maxAge,
-      Path = "/"
-    };
-    
-    // var cookieDomain = _config["Cookie:Domain"];
-    // if (!string.IsNullOrWhiteSpace(cookieDomain))
-    // {
-    //   options.Domain = cookieDomain;
-    // }
+        var userIdClaim = _httpContextAccessor.HttpContext?.User?.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
+        return Guid.TryParse(userIdClaim, out var userId) ? userId : null;
+    }
 
-    return options;
-  }
+    private CookieOptions CreateCookieOptions(TimeSpan? maxAge = null)
+    {
+        var options = new CookieOptions
+        {
+            HttpOnly = true,
+            Secure = true,
+            SameSite = SameSiteMode.Strict,
+            MaxAge = maxAge,
+            Path = "/"
+        };
+
+        // var cookieDomain = _config["Cookie:Domain"];
+        // if (!string.IsNullOrWhiteSpace(cookieDomain))
+        // {
+        //   options.Domain = cookieDomain;
+        // }
+
+        return options;
+    }
 }

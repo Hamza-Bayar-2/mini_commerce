@@ -12,8 +12,8 @@ public class LogoutCommandHandler : IRequestHandler<LogoutCommand, Result<Unit>>
     private readonly IRefreshTokenRepository _refreshTokenRepo;
 
     public LogoutCommandHandler(
-        ICookieService cookieService, 
-        ITokenService tokenService, 
+        ICookieService cookieService,
+        ITokenService tokenService,
         IRefreshTokenRepository refreshTokenRepo)
     {
         _cookieService = cookieService;
@@ -38,7 +38,7 @@ public class LogoutCommandHandler : IRequestHandler<LogoutCommand, Result<Unit>>
 
         // 2. Delete cookies from response
         var result = await _cookieService.DeleteCookies();
-        
+
         if (!result.IsSuccess)
             return Result<Unit>.Failure(result.ErrorMessage!);
 
