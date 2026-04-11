@@ -22,12 +22,21 @@ To ensure data consistency and integrity, direct calls to `SaveChangesAsync()` f
     *   It begins a transaction via `IUnitOfWork`.
     *   If the command handler runs successfully (all validations pass, all logic succeeds), it automatically calls `CommitTransactionAsync` which calls `SaveChangesAsync`.
     *   **CRITICAL RULE:** For the `TransactionBehavior` to intercept your request, the request MUST implement the `ICommand` (or `ICommand<TResponse>`) interface. If you forget this, `SaveChangesAsync` will NOT be called, and your changes will not be persisted.
+    *   **Result Pattern & Rollback:** If the handler returns a `Result<T>` with `IsSuccess = false`, the `TransactionBehavior` MUST catch this via `IResult` interface, issue a `RollbackTransactionAsync`, and return the failed result.
     *   If an exception occurs anywhere in the pipeline or handler, the behavior catches it and safely issues a `RollbackTransactionAsync`.
 
 ### What Does This Mean For You?
 When you write business logic inside a Service or a Command Handler, you only deal with repositories (e.g., `await _userRepo.AddAsync(user, ct)`). You **DO NOT** manually save changes. The system automatically inserts/updates the DB safely when your handler finishes its execution without errors.
 
-## 3. Repositories and Entity Configuration
+## 3. Error Handling and Result Pattern
+
+We strictly avoid using Exceptions for flow control (e.g., throwing an exception when a user is not found). Instead, we use a uniform `Result<T>` pattern.
+
+*   **Result<T>:** All Commands and Queries MUST return a `Result<T>` (or `Result<Unit>`).
+*   **IResult Interface:** The `Result<T>` type implements the `IResult` interface to allow non-generic access to the `IsSuccess` state within pipeline behaviors.
+*   **Controller Logic:** Controllers check `result.IsSuccess` and return appropriate HTTP status codes (e.g., `BadRequest`, `NotFound`, `Unauthorized`) based on the `ErrorMessage`.
+
+## 4. Repositories and Entity Configuration
 
 The project uses the Generic Repository Pattern and Entity Framework Core for data access.
 
@@ -44,7 +53,7 @@ The project uses the Generic Repository Pattern and Entity Framework Core for da
 We use **FluentValidation** integrated with MediatR behavior (`ValidationBehavior`).
 
 *   When creating a new Command/Query that requires validation, simply create a class inheriting from `AbstractValidator<TCommand>` and define the validation rules.
-*   The `ValidationBehavior` will automatically intercept the request, run all registered validators, and throw a `ValidationException` before the handler is even executed if validation fails.
+*   **Result Pattern Validation:** The `ValidationBehavior` automatically intercepts the request. If validation fails, it captures all errors and returns a `Result<T>.Failure` (using reflection to call the static Failure method) instead of throwing an exception. This ensures a consistent error flow.
 
 ## Checklist for Adding a New Capability:
 
