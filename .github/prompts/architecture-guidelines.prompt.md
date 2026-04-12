@@ -75,9 +75,17 @@ For any entity that represents a fixed set of values (Lookup tables like Roles, 
 
 ## Checklist for Adding a New Capability:
 
-1.  **Define Request:** Create the Record class implementing `ICommand<TResponse>` or `IQuery<TResponse>`.
-2.  **Define Validator (optional):** Create an `AbstractValidator<TCommand>` for your request if it takes user input.
-3.  **Define Handler:** Create a class implementing `IRequestHandler<YourCommand, TResponse>`.
+1.  **Define Request & Mandatory Triple:** For every business operation, you MUST create three distinct files in the same feature folder:
+    - The **Request** (Record implementing `ICommand` or `IQuery`).
+    - The **Validator** (Class inheriting `AbstractValidator<TRequest>`).
+    - The **Handler** (Class implementing `IRequestHandler<TRequest, TResponse>`).
+2.  **Service-Driven Logic:** Handlers should remain lean.
+    - If a logic can be encapsulated, use an existing Domain/Infrastructure service or CREATE a new one (e.g., `ProductManagerService`, `ProductStatusService`).
+    - Inject these services into the Handler to perform the core operations.
+3.  **Mapping Standards:** 
+    - Do NOT manually map entities to DTOs inside Handlers or Services if it can be centralized.
+    - Use static mapping classes under the `Application.Mappings` folder (e.g., `ProductMappings.MapToDto`).
+    - Handlers should use these mappers when returning `Result<TResponse>`.
 4.  **Inject Dependencies:** Inject your desired domain Repositories and external Services into the handler. Do not inject `AppDbContext` directly.
 5.  **Execute Logic:** Use repository methods like `AddAsync` or `Update` to mutate state. Do **not** call arbitrary save methods.
 6.  **Dependency Injection (DI):** If you create a new Service or Repository, remember to register it in `DependencyInjection.cs` (e.g., `services.AddScoped<INewRepo, NewRepo>()`) under the respective layer (Application vs Infrastructure).
