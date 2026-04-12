@@ -18,13 +18,18 @@ The project consists of the following microservices:
 
 To run the services, you must first ensure the database is running.
 
-### 🐳 Running the Database (Docker)
+### 🐳 Running the Dependencies (Docker)
 1. **Create and start the SQL Server instance:**
 ```bash
 docker run -e "ACCEPT_EULA=Y" -e "MSSQL_SA_PASSWORD=StrongPass123" -p 1433:1433 --name sqlserver_db -d mcr.microsoft.com/mssql/server:2022-latest
 ```
 
-2. **Create the specific databases (`AuthDb` and `ProductDb`):**
+2. **Create and start the Redis instance for caching:**
+```bash
+docker run -d --name redis -p 6379:6379 redis:alpine
+```
+
+3. **Create the specific databases (`AuthDb` and `ProductDb`):**
 ```bash
 # Create AuthDb
 docker exec -it sqlserver_db /opt/mssql-tools18/bin/sqlcmd -S localhost -U sa -P StrongPass123 -C -Q "IF NOT EXISTS (SELECT name FROM sys.databases WHERE name = N'AuthDb') CREATE DATABASE AuthDb"
@@ -33,7 +38,7 @@ docker exec -it sqlserver_db /opt/mssql-tools18/bin/sqlcmd -S localhost -U sa -P
 docker exec -it sqlserver_db /opt/mssql-tools18/bin/sqlcmd -S localhost -U sa -P StrongPass123 -C -Q "IF NOT EXISTS (SELECT name FROM sys.databases WHERE name = N'ProductDb') CREATE DATABASE ProductDb"
 ```
 
-3. **Apply Database Migrations:**
+4. **Apply Database Migrations:**
 Before running the services, you must create and apply the initial migrations to set up the database tables for both services.
 
 *First, generate the initial migrations (if not already done):*
