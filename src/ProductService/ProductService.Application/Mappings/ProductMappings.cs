@@ -10,6 +10,7 @@ public static class ProductMappings
     {
         var dto = new ProductResponseDto
         {
+            Id = product.Id,
             Name = product.Name,
             Description = product.Description,
             StatusName = GetStatusName(product.StatusId),

@@ -87,6 +87,9 @@ public class ProductManagerService : IProductService
         if (product == null)
             return Result<ProductResponseDto>.Failure("Product not found");
 
+        if (product.DeletedAt.HasValue)
+            return Result<ProductResponseDto>.Failure("This product has been deleted.");
+
         return Result<ProductResponseDto>.Success(ProductMappings.MapToDto(product));
     }
 
@@ -96,6 +99,9 @@ public class ProductManagerService : IProductService
 
         if (product == null)
             return Result<ProductResponseDto>.Failure("Product not found");
+
+        if (product.DeletedAt.HasValue)
+            return Result<ProductResponseDto>.Failure("This product has been deleted.");
 
         return Result<ProductResponseDto>.Success(ProductMappings.MapToDto(product));
     }

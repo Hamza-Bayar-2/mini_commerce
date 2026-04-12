@@ -52,6 +52,8 @@ builder.Services.AddAuthorization(options =>
 {
     options.AddPolicy("SellerOrAdmin", policy =>
         policy.RequireRole("SELLER", "ADMIN"));
+    options.AddPolicy("AdminOnly", policy =>
+        policy.RequireRole("ADMIN"));
 });
 
 builder.Services.AddOpenApi();

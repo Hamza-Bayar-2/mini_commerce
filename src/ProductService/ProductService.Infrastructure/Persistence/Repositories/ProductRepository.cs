@@ -14,6 +14,6 @@ public class ProductRepository : GenericRepository<Product>, IProductRepository
     public async Task<Product?> GetByNameAsync(string name, CancellationToken ct)
     {
         return await _db.Products
-            .FirstOrDefaultAsync(x => x.Name.Equals(name, StringComparison.CurrentCultureIgnoreCase), ct);
+            .FirstOrDefaultAsync(x => x.Name.ToLower() == name.ToLower(), ct);
     }
 }
