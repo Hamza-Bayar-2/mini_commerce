@@ -40,10 +40,10 @@ public class AuthController : ControllerBase
     }
 
     [HttpPost("refresh")]
-    [Authorize]
-    public async Task<IActionResult> Refresh(RefreshTokenCommand command)
+    [AllowAnonymous]
+    public async Task<IActionResult> Refresh()
     {
-        var result = await _mediator.Send(command);
+        var result = await _mediator.Send(new RefreshTokenCommand());
         if (!result.IsSuccess)
             return Unauthorized(new { Error = result.ErrorMessage });
 

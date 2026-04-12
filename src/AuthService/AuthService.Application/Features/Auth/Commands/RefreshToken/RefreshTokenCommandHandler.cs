@@ -23,9 +23,13 @@ public class RefreshTokenCommandHandler : IRequestHandler<RefreshTokenCommand, R
     }
     public async Task<Result<AuthResponseDto>> Handle(RefreshTokenCommand request, CancellationToken ct)
     {
+        var refreshToken = _cookieService.GetRefreshToken();
+        if (string.IsNullOrEmpty(refreshToken))
+            return Result<AuthResponseDto>.Failure("Refresh token not found in cookies.");
+
         var now = DateTime.UtcNow;
 
-        var validationResult = await _tokenService.ValidateRefreshTokenAsync(request.TokenString, now, ct);
+        var validationResult = await _tokenService.ValidateRefreshTokenAsync(refreshToken, now, ct);
 
         if (!validationResult.IsSuccess)
             return Result<AuthResponseDto>.Failure(validationResult.ErrorMessage!);

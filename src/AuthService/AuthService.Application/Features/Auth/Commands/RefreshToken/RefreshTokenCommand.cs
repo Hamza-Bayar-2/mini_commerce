@@ -4,6 +4,4 @@ using AuthService.Application.Interfaces;
 
 namespace AuthService.Application.Features.Auth.Commands.RefreshToken;
 
-public record RefreshTokenCommand(
-    string TokenString
-) : ICommand<Result<AuthResponseDto>>;
+public record RefreshTokenCommand() : ICommand<Result<AuthResponseDto>>;

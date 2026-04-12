@@ -6,6 +6,5 @@ public class RefreshTokenCommandValidator : AbstractValidator<RefreshTokenComman
 {
     public RefreshTokenCommandValidator()
     {
-        RuleFor(x => x.TokenString).NotEmpty().WithMessage("No refresh token string was injected");
     }
 }
