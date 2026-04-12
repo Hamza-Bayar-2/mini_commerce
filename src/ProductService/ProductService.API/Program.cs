@@ -62,7 +62,7 @@ builder.Services.AddSwaggerGen();
 
 // ProductService kütüphanelerini çağırıyoruz
 builder.Services.AddApplication();
-builder.Services.AddInfrastructure(builder.Configuration.GetConnectionString("Default"));
+builder.Services.AddInfrastructure(builder.Configuration);
 
 var app = builder.Build();
 
