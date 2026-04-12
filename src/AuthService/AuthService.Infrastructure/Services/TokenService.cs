@@ -81,7 +81,6 @@ public class TokenService : ITokenService
 
         var newRefreshTokenEntity = new UserRefreshToken
         {
-            Id = Guid.NewGuid(),
             UserId = userId,
             TokenHash = hashedTokenResult.Data!,
             ExpiresAt = now.AddDays(14),

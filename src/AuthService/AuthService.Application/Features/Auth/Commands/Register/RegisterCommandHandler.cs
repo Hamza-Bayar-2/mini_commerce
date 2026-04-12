@@ -39,7 +39,6 @@ public class RegisterCommandHandler : IRequestHandler<RegisterCommand, Result<Au
 
         var user = new User
         {
-            Id = Guid.NewGuid(),
             FirstName = request.FirstName,
             LastName = request.LastName,
             Email = request.Email,

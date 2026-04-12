@@ -2,6 +2,10 @@
 
 public partial class UserRefreshToken
 {
+    public UserRefreshToken()
+    {
+        Id = Guid.NewGuid();
+    }
     public Guid Id { get; set; }
 
     public Guid UserId { get; set; }
