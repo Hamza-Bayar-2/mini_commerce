@@ -2,8 +2,8 @@ namespace ProductService.Application.DTOs;
 
 public class ProductResponseDto
 {
-    public required string Name { get; set; }
+    public string? Name { get; set; }
     public string? Description { get; set; }
-    public required int Stock { get; set; }
-    public required string StatusName { get; set; }
+    public int? Stock { get; set; }
+    public string? StatusName { get; set; }
 }

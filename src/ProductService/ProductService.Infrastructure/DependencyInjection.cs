@@ -5,6 +5,8 @@ using ProductService.Application.Interfaces.Repositories;
 using ProductService.Infrastructure.Persistence;
 using ProductService.Infrastructure.Persistence.Context;
 using ProductService.Infrastructure.Persistence.Repositories;
+using ProductService.Application.Interfaces.Services;
+using ProductService.Infrastructure.Services;
 
 namespace ProductService.Infrastructure;
 
@@ -20,6 +22,9 @@ public static class DependencyInjection
         services.AddScoped<IProductRepository, ProductRepository>();
         services.AddScoped<IProductStatusRepository, ProductStatusRepository>();
         services.AddScoped<IUnitOfWork, UnitOfWork>();
+
+        services.AddScoped<IStatusService, ProductStatusService>();
+        services.AddScoped<IProductService, ProductManagerService>();
 
         return services;
     }

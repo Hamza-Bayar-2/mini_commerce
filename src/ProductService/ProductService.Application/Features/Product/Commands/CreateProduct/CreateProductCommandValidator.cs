@@ -1,4 +1,5 @@
 using FluentValidation;
+using ProductService.Domain.Enums;
 
 namespace ProductService.Application.Features.Product.Commands.CreateProduct;
 
@@ -18,8 +19,11 @@ public class CreateProductCommandValidator : AbstractValidator<CreateProductComm
 
         RuleFor(x => x.StatusId)
             .NotEmpty()
-            .InclusiveBetween((short)1, (short)5).WithMessage("Invalid Status ID.")
-            .Must((command, statusId) => command.Stock != 0 || statusId == 5)
-            .WithMessage("If stock is 0, Status must be 'OUT_OF_STOCK' (5).");
+            .Must(id => Enum.IsDefined(typeof(ProductStatuses), id))
+            .WithMessage("Geçersiz ürün durumu.");
+
+        RuleFor(x => x)
+            .Must(x => x.Stock != 0 || x.StatusId == (short)ProductStatuses.OUT_OF_STOCK)
+            .WithMessage($"Stok 0 olduğunda durum '{ProductStatuses.OUT_OF_STOCK}' olmalıdır.");
     }
 }
