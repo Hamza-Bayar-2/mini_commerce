@@ -11,6 +11,8 @@ public class UpdateProductCommandValidator : AbstractValidator<UpdateProductComm
             .NotNull();
         
         RuleFor(x => x.Name)
+            .MinimumLength(2)
+            .When(x => !string.IsNullOrEmpty(x.Name))
             .MaximumLength(255);
 
         RuleFor(x => x.Description)

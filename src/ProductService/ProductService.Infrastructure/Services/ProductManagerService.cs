@@ -79,4 +79,24 @@ public class ProductManagerService : IProductService
 
         return Result<ProductResponseDto>.Success(response);
     }
+
+    public async Task<Result<ProductResponseDto>> GetProductByIdAsync(Guid id, CancellationToken ct)
+    {
+        var product = await _productRepo.GetByIdAsync(id, ct);
+
+        if (product == null)
+            return Result<ProductResponseDto>.Failure("Product not found");
+
+        return Result<ProductResponseDto>.Success(ProductMappings.MapToDto(product));
+    }
+
+    public async Task<Result<ProductResponseDto>> GetProductByNameAsync(string name, CancellationToken ct)
+    {
+        var product = await _productRepo.GetByNameAsync(name, ct);
+
+        if (product == null)
+            return Result<ProductResponseDto>.Failure("Product not found");
+
+        return Result<ProductResponseDto>.Success(ProductMappings.MapToDto(product));
+    }
 }
