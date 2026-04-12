@@ -9,6 +9,7 @@ using ProductService.Application.Interfaces.Services;
 using ProductService.Infrastructure.Services;
 using Microsoft.Extensions.Caching.Distributed;
 using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.Logging;
 
 namespace ProductService.Infrastructure;
 
@@ -19,7 +20,7 @@ public static class DependencyInjection
         ConfigurationManager configuration)
     {
         services.AddHttpContextAccessor();
-        
+
         // Database connection
         services.AddDbContext<AppDbContext>(opt =>
             opt.UseSqlServer(configuration.GetConnectionString("Default"))
@@ -30,7 +31,8 @@ public static class DependencyInjection
         services.AddScoped<IProductRepository>(sp =>
             new CachedProductRepository(
                 sp.GetRequiredService<ProductRepository>(),
-                sp.GetRequiredService<IDistributedCache>()
+                sp.GetRequiredService<IDistributedCache>(),
+                sp.GetRequiredService<ILogger<CachedProductRepository>>()
         ));
         services.AddScoped<IProductStatusRepository, ProductStatusRepository>();
         services.AddScoped<IUnitOfWork, UnitOfWork>();
@@ -43,6 +45,7 @@ public static class DependencyInjection
         services.AddStackExchangeRedisCache(redisOpt =>
         {
             redisOpt.Configuration = configuration.GetConnectionString("Redis");
+            redisOpt.InstanceName = "ProductService:";
         });
 
         return services;

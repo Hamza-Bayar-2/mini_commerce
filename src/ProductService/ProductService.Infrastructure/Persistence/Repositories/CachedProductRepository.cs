@@ -1,5 +1,6 @@
 using System.Text.Json;
 using Microsoft.Extensions.Caching.Distributed;
+using Microsoft.Extensions.Logging;
 using ProductService.Application.Interfaces.Repositories;
 using ProductService.Domain.Entities;
 
@@ -9,93 +10,99 @@ public class CachedProductRepository : IProductRepository
 {
     private readonly IProductRepository _decorated;
     private readonly IDistributedCache _cache;
+    private readonly ILogger<CachedProductRepository> _logger;
 
-    public CachedProductRepository(IProductRepository decorated, IDistributedCache cache)
+    private const string AllProductsKey = "products:all";
+    private static string ProductKey(Guid id) => $"products:{id}";
+    private static string ProductNameKey(string name) => $"products:name:{name.ToLower()}";
+
+    public CachedProductRepository(
+        IProductRepository decorated,
+        IDistributedCache cache,
+        ILogger<CachedProductRepository> logger)
     {
         _decorated = decorated;
         _cache = cache;
-    }
-
-    // magic string olmasın
-    private const string AllProductsKey = "products:all";
-    private static string ProductKey(Guid id) => $"products:{id}";
-    private static string ProductNameKey(string name) => $"products:{name.ToLower()}";
-
-    public async Task<Product> AddAsync(Product entity, CancellationToken ct)
-    {
-        await _decorated.AddAsync(entity, ct);
-        await _cache.RemoveAsync(AllProductsKey, ct);
-        return entity;
+        _logger = logger;
     }
 
     public async Task<Product?> GetByIdAsync(Guid id, CancellationToken ct)
     {
-        var json = await _cache.GetStringAsync(ProductKey(id), ct);
-        if (json != null)
-            return JsonSerializer.Deserialize<Product>(json); // Memory hit
-
-        var product = await _decorated.GetByIdAsync(id, ct); // Memory miss
-
-        if (product != null)
+        try
         {
-            await _cache.SetStringAsync(
-                ProductKey(id),
-                JsonSerializer.Serialize(product),
-                new DistributedCacheEntryOptions
-                {
-                    AbsoluteExpirationRelativeToNow = TimeSpan.FromMinutes(5)
-                },
-                ct);
-        }
+            var json = await _cache.GetStringAsync(ProductKey(id), ct);
+            if (json is not null)
+                return JsonSerializer.Deserialize<Product>(json);
 
-        return product;
+            var product = await _decorated.GetByIdAsync(id, ct);
+            if (product is not null)
+                await _cache.SetStringAsync(
+                    ProductKey(id),
+                    JsonSerializer.Serialize(product),
+                    new DistributedCacheEntryOptions
+                    {
+                        AbsoluteExpirationRelativeToNow = TimeSpan.FromMinutes(5)
+                    }, ct);
+
+            return product;
+        }
+        catch (Exception ex)
+        {
+            _logger.LogWarning(ex, "Cache unavailable, falling back to database.");
+            return await _decorated.GetByIdAsync(id, ct);
+        }
     }
 
     public async Task<Product?> GetByNameAsync(string name, CancellationToken ct)
     {
-        // 1. Önce isimden ID'yi bulmaya çalış (Pointer)
-        var idString = await _cache.GetStringAsync(ProductNameKey(name), ct);
-
-        if (!string.IsNullOrEmpty(idString))
+        try
         {
-            // 2. ID bulunduysa GetByIdAsync'e yönlendir
-            if (Guid.TryParse(idString, out var id))
+            var idString = await _cache.GetStringAsync(ProductNameKey(name), ct);
+            if (!string.IsNullOrEmpty(idString) && Guid.TryParse(idString, out var id))
             {
-                var cachedProduct = await GetByIdAsync(id, ct);
-                if (cachedProduct != null)
-                    return cachedProduct;
+                var json = await _cache.GetStringAsync(ProductKey(id), ct);
+                if (json is not null)
+                    return JsonSerializer.Deserialize<Product>(json);
             }
+
+            var product = await _decorated.GetByNameAsync(name, ct);
+            if (product is not null)
+            {
+                var options = new DistributedCacheEntryOptions
+                {
+                    AbsoluteExpirationRelativeToNow = TimeSpan.FromMinutes(5)
+                };
+                var pointerOptions = new DistributedCacheEntryOptions
+                {
+                    AbsoluteExpirationRelativeToNow = TimeSpan.FromMinutes(4)
+                };
+                await _cache.SetStringAsync(ProductKey(product.Id),
+                    JsonSerializer.Serialize(product), options, ct);
+                await _cache.SetStringAsync(ProductNameKey(name),
+                    product.Id.ToString(), pointerOptions, ct);
+            }
+
+            return product;
         }
-
-        // 3. Pointer yoksa veya asıl data cache'den silindiyse DB'den getir
-        var product = await _decorated.GetByNameAsync(name, ct);
-
-        if (product != null)
+        catch (Exception ex)
         {
-            // 4. Bulunan ürünü ana anahtar (ID) ile kaydet
-            await _cache.SetStringAsync(
-                ProductKey(product.Id),
-                JsonSerializer.Serialize(product),
-                new DistributedCacheEntryOptions { AbsoluteExpirationRelativeToNow = TimeSpan.FromMinutes(5) },
-                ct);
-
-            // 5. İsimden bu ID'ye giden bir işaretçi oluştur
-            await _cache.SetStringAsync(
-                ProductNameKey(name),
-                product.Id.ToString(),
-                new DistributedCacheEntryOptions { AbsoluteExpirationRelativeToNow = TimeSpan.FromMinutes(5) },
-                ct);
+            _logger.LogWarning(ex, "Cache unavailable, falling back to database.");
+            return await _decorated.GetByNameAsync(name, ct);
         }
-
-        return product;
     }
 
-    public async Task<Product> RemoveAsync(Product entity)
+    public async Task<Product> AddAsync(Product entity, CancellationToken ct)
     {
-        await _decorated.RemoveAsync(entity);
+        await _decorated.AddAsync(entity, ct);
 
-        await _cache.RemoveAsync(ProductKey(entity.Id));
-        await _cache.RemoveAsync(ProductNameKey(entity.Name));
+        try
+        {
+            await _cache.RemoveAsync(AllProductsKey, ct);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogWarning(ex, "Cache invalidation failed after add.");
+        }
 
         return entity;
     }
@@ -104,8 +111,32 @@ public class CachedProductRepository : IProductRepository
     {
         await _decorated.UpdateAsync(entity);
 
-        await _cache.RemoveAsync(ProductKey(entity.Id));
-        await _cache.RemoveAsync(ProductNameKey(entity.Name));
+        try
+        {
+            await _cache.RemoveAsync(ProductKey(entity.Id));
+            await _cache.RemoveAsync(ProductNameKey(entity.Name));
+        }
+        catch (Exception ex)
+        {
+            _logger.LogWarning(ex, "Cache invalidation failed after update.");
+        }
+
+        return entity;
+    }
+
+    public async Task<Product> RemoveAsync(Product entity)
+    {
+        await _decorated.RemoveAsync(entity);
+
+        try
+        {
+            await _cache.RemoveAsync(ProductKey(entity.Id));
+            await _cache.RemoveAsync(ProductNameKey(entity.Name));
+        }
+        catch (Exception ex)
+        {
+            _logger.LogWarning(ex, "Cache invalidation failed after remove.");
+        }
 
         return entity;
     }
