@@ -3,7 +3,7 @@ using ProductService.Application.DTOs;
 using ProductService.Application.Interfaces.Repositories;
 using ProductService.Application.Interfaces.Services;
 using ProductService.Domain.Entities;
-using ProductService.Domain.Enums;
+using ProductService.Application.Mappings;
 
 namespace ProductService.Infrastructure.Services;
 
@@ -30,7 +30,7 @@ public class ProductManagerService : IProductService
 
         await _productRepo.AddAsync(product, ct);
 
-        return Result<ProductResponseDto>.Success(MapToResponse(product));
+        return Result<ProductResponseDto>.Success(ProductMappings.MapToDto(product));
     }
 
     public async Task<Result<ProductResponseDto>> UpdateProductAsync(Guid id, string? name, string? description, int? stock, short? statusId, CancellationToken ct)
@@ -38,6 +38,9 @@ public class ProductManagerService : IProductService
         var product = await _productRepo.GetByIdAsync(id, ct);
         if (product == null)
             return Result<ProductResponseDto>.Failure("Product not found");
+
+        if (product.DeletedAt.HasValue)
+            return Result<ProductResponseDto>.Failure("Cannot update a soft-deleted product.");
 
         product.Name = name ?? product.Name;
         product.Description = description ?? product.Description;
@@ -47,17 +50,33 @@ public class ProductManagerService : IProductService
 
         await _productRepo.UpdateAsync(product);
 
-        return Result<ProductResponseDto>.Success(MapToResponse(product));
+        return Result<ProductResponseDto>.Success(ProductMappings.MapToDto(product));
     }
 
-    private ProductResponseDto MapToResponse(Product product)
+    public async Task<Result<ProductResponseDto>> SoftDeleteProductAsync(Guid id, CancellationToken ct)
     {
-        return new ProductResponseDto
-        {
-            Name = product.Name,
-            Description = product.Description,
-            Stock = product.Stock,
-            StatusName = product.Status?.Name ?? "N/A"
-        };
+        var product = await _productRepo.GetByIdAsync(id, ct);
+        if (product == null)
+            return Result<ProductResponseDto>.Failure("Product not found");
+
+        if (product.DeletedAt.HasValue)
+            return Result<ProductResponseDto>.Failure("Product is already soft-deleted.");
+
+        product.DeletedAt = DateTime.UtcNow;
+        await _productRepo.UpdateAsync(product);
+
+        return Result<ProductResponseDto>.Success(ProductMappings.MapToDto(product));
+    }
+
+    public async Task<Result<ProductResponseDto>> HardDeleteProductAsync(Guid id, CancellationToken ct)
+    {
+        var product = await _productRepo.GetByIdAsync(id, ct);
+        if (product == null)
+            return Result<ProductResponseDto>.Failure("Product not found");
+
+        var response = ProductMappings.MapToDto(product);
+        await _productRepo.RemoveAsync(product);
+
+        return Result<ProductResponseDto>.Success(response);
     }
 }

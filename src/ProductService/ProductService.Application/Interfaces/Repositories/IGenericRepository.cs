@@ -6,5 +6,7 @@ public interface IGenericRepository<T> where T : class
 
     Task<T> AddAsync(T entity, CancellationToken ct);
 
+    Task<T> RemoveAsync(T entity);
+
     Task<T> UpdateAsync(T entity);
 }
