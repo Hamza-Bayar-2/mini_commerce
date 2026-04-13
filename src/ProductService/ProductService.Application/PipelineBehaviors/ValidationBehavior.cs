@@ -27,7 +27,7 @@ public class ValidationBehavior<TRequest, TResponse> : IPipelineBehavior<TReques
             _validators.Select(v => v.ValidateAsync(context, ct)));
 
         var failures = validationResults
-            .Where(r => r.Errors.Any())
+            .Where(r => r.Errors.Count != 0)
             .SelectMany(r => r.Errors)
             .ToList();
 
@@ -37,11 +37,12 @@ public class ValidationBehavior<TRequest, TResponse> : IPipelineBehavior<TReques
             var errorMessage = $"{firstError.PropertyName}: {firstError.ErrorMessage}";
 
             // Invoke static Failure method on Result<T> via reflection
-            var failureMethod = typeof(TResponse).GetMethod("Failure", System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.Static);
+            var failureMethod = typeof(TResponse)
+                .GetMethod("Failure", System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.Static);
 
             if (failureMethod != null)
             {
-                var failureResult = failureMethod.Invoke(null, new object[] { errorMessage });
+                var failureResult = failureMethod.Invoke(null, [errorMessage]);
                 return (TResponse)failureResult!;
             }
 
