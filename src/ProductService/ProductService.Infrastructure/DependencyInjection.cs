@@ -10,6 +10,7 @@ using ProductService.Infrastructure.Services;
 using Microsoft.Extensions.Caching.Distributed;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
+using MassTransit;
 
 namespace ProductService.Infrastructure;
 
@@ -37,9 +38,27 @@ public static class DependencyInjection
         services.AddScoped<IProductStatusRepository, ProductStatusRepository>();
         services.AddScoped<IUnitOfWork, UnitOfWork>();
 
+        // RabbitMQ connections
+        services.AddMassTransit(x =>
+        {
+            x.UsingRabbitMq((ctx, cfg) =>
+            {
+                var host = configuration["RabbitMQ:Host"] ?? "localhost";
+                var username = configuration["RabbitMQ:Username"] ?? "guest";
+                var password = configuration["RabbitMQ:Password"] ?? "guest";
+
+                cfg.Host(host, "/", h =>
+                {
+                    h.Username(username);
+                    h.Password(password);
+                });
+            });
+        });
+
         // Service connections
         services.AddScoped<IStatusService, ProductStatusService>();
         services.AddScoped<IProductService, ProductManagerService>();
+        services.AddScoped<IEventPublisherService, EventPublisherService>();
 
         // Redis connection
         services.AddStackExchangeRedisCache(redisOpt =>

@@ -54,33 +54,33 @@ When creating a new microservice under `src/`, follow these steps:
 ### 1. Create Projects
 
 ```powershell
-cd src/SERVICE_NAME
-dotnet new sln -n SERVICE_NAME
+cd src/LogService
+dotnet new sln -n LogService
 
-dotnet new webapi -n SERVICE_NAME.API --no-openapi false
-dotnet new classlib -n SERVICE_NAME.Application
-dotnet new classlib -n SERVICE_NAME.Domain
-dotnet new classlib -n SERVICE_NAME.Infrastructure
+dotnet new webapi -n LogService.API --no-openapi false
+dotnet new classlib -n LogService.Application
+dotnet new classlib -n LogService.Domain
+dotnet new classlib -n LogService.Infrastructure
 
-dotnet sln add SERVICE_NAME.API/SERVICE_NAME.API.csproj
-dotnet sln add SERVICE_NAME.Application/SERVICE_NAME.Application.csproj
-dotnet sln add SERVICE_NAME.Domain/SERVICE_NAME.Domain.csproj
-dotnet sln add SERVICE_NAME.Infrastructure/SERVICE_NAME.Infrastructure.csproj
+dotnet sln add LogService.API/LogService.API.csproj
+dotnet sln add LogService.Application/LogService.Application.csproj
+dotnet sln add LogService.Domain/LogService.Domain.csproj
+dotnet sln add LogService.Infrastructure/LogService.Infrastructure.csproj
 ```
 
 ### 2. Establish Layer Connections
 
 ```powershell
-cd src/SERVICE_NAME
+cd src/LogService
 
 # API references Application and Infrastructure
-dotnet add SERVICE_NAME.API/SERVICE_NAME.API.csproj reference SERVICE_NAME.Application/SERVICE_NAME.Application.csproj SERVICE_NAME.Infrastructure/SERVICE_NAME.Infrastructure.csproj
+dotnet add LogService.API/LogService.API.csproj reference LogService.Application/LogService.Application.csproj LogService.Infrastructure/LogService.Infrastructure.csproj
 
 # Infrastructure references Application
-dotnet add SERVICE_NAME.Infrastructure/SERVICE_NAME.Infrastructure.csproj reference SERVICE_NAME.Application/SERVICE_NAME.Application.csproj
+dotnet add LogService.Infrastructure/LogService.Infrastructure.csproj reference LogService.Application/LogService.Application.csproj
 
 # Application references Domain
-dotnet add SERVICE_NAME.Application/SERVICE_NAME.Application.csproj reference SERVICE_NAME.Domain/SERVICE_NAME.Domain.csproj
+dotnet add LogService.Application/LogService.Application.csproj reference LogService.Domain/LogService.Domain.csproj
 ```
 
 ### 3. Add Essential NuGet Packages
@@ -88,20 +88,20 @@ dotnet add SERVICE_NAME.Application/SERVICE_NAME.Application.csproj reference SE
 For each service, you should add these base packages to follow the architecture:
 
 ```powershell
-cd src/SERVICE_NAME
+cd src/LogService
 
 # Infrastructure: Database and Tools
-dotnet add SERVICE_NAME.Infrastructure/SERVICE_NAME.Infrastructure.csproj package Microsoft.EntityFrameworkCore.SqlServer
-dotnet add SERVICE_NAME.Infrastructure/SERVICE_NAME.Infrastructure.csproj package Microsoft.EntityFrameworkCore.Tools
+dotnet add LogService.Infrastructure/LogService.Infrastructure.csproj package Microsoft.EntityFrameworkCore.SqlServer
+dotnet add LogService.Infrastructure/LogService.Infrastructure.csproj package Microsoft.EntityFrameworkCore.Tools
 
 # Application: Business Logic and Validation
-dotnet add SERVICE_NAME.Application/SERVICE_NAME.Application.csproj package MediatR
-dotnet add SERVICE_NAME.Application/SERVICE_NAME.Application.csproj package FluentValidation
+dotnet add LogService.Application/LogService.Application.csproj package MediatR
+dotnet add LogService.Application/LogService.Application.csproj package FluentValidation
 
 # API: Security and Documentation
-dotnet add SERVICE_NAME.API/SERVICE_NAME.API.csproj package Microsoft.AspNetCore.Authentication.JwtBearer
-dotnet add SERVICE_NAME.API/SERVICE_NAME.API.csproj package Microsoft.AspNetCore.Identity.EntityFrameworkCore
-dotnet add SERVICE_NAME.API/SERVICE_NAME.API.csproj package Swashbuckle.AspNetCore
+dotnet add LogService.API/LogService.API.csproj package Microsoft.AspNetCore.Authentication.JwtBearer
+dotnet add LogService.API/LogService.API.csproj package Microsoft.AspNetCore.Identity.EntityFrameworkCore
+dotnet add LogService.API/LogService.API.csproj package Swashbuckle.AspNetCore
 ```
 
 ---

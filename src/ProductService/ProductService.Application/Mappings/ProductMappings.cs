@@ -15,6 +15,9 @@ public static class ProductMappings
             Description = product.Description,
             StatusName = GetStatusName(product.StatusId),
             Stock = product.Stock,
+            CreatedAt = product.CreatedAt,
+            UpdatedAt = product.UpdatedAt,
+            DeletedAt = product.DeletedAt
         };
 
         return dto;

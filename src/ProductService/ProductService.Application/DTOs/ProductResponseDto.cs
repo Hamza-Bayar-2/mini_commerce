@@ -7,4 +7,7 @@ public class ProductResponseDto
     public string? Description { get; set; }
     public int? Stock { get; set; }
     public string? StatusName { get; set; }
+    public DateTime? CreatedAt { get; set; }
+    public DateTime? UpdatedAt { get; set; }
+    public DateTime? DeletedAt { get; set; }
 }

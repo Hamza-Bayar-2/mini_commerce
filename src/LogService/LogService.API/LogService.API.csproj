@@ -10,12 +10,16 @@
     <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="10.0.5" />
     <PackageReference Include="Microsoft.AspNetCore.Identity.EntityFrameworkCore" Version="10.0.5" />
     <PackageReference Include="Microsoft.AspNetCore.OpenApi" Version="10.0.4" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="10.0.5">
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+      <PrivateAssets>all</PrivateAssets>
+    </PackageReference>
     <PackageReference Include="Swashbuckle.AspNetCore" Version="10.1.7" />
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\LogService.Application\LogService.Application.csproj" />
     <ProjectReference Include="..\LogService.Infrastructure\LogService.Infrastructure.csproj" />
+    <ProjectReference Include="..\LogService.Application\LogService.Application.csproj" />
   </ItemGroup>
 
 </Project>

@@ -29,13 +29,21 @@ docker run -e "ACCEPT_EULA=Y" -e "MSSQL_SA_PASSWORD=StrongPass123" -p 1433:1433 
 docker run -d --name redis -p 6379:6379 redis:alpine
 ```
 
-3. **Create the specific databases (`AuthDb` and `ProductDb`):**
+3. **Create and start the RabbitMQ instance for messaging:**
+```bash
+docker run -d --name rabbitmq -p 5672:5672 -p 15672:15672 rabbitmq:3-management
+```
+
+4. **Create the specific databases (`AuthDb`, `ProductDb` and `LogDb`):**
 ```bash
 # Create AuthDb
 docker exec -it sqlserver_db /opt/mssql-tools18/bin/sqlcmd -S localhost -U sa -P StrongPass123 -C -Q "IF NOT EXISTS (SELECT name FROM sys.databases WHERE name = N'AuthDb') CREATE DATABASE AuthDb"
 
 # Create ProductDb
 docker exec -it sqlserver_db /opt/mssql-tools18/bin/sqlcmd -S localhost -U sa -P StrongPass123 -C -Q "IF NOT EXISTS (SELECT name FROM sys.databases WHERE name = N'ProductDb') CREATE DATABASE ProductDb"
+
+# Create LogDb
+docker exec -it sqlserver_db /opt/mssql-tools18/bin/sqlcmd -S localhost -U sa -P StrongPass123 -C -Q "IF NOT EXISTS (SELECT name FROM sys.databases WHERE name = N'LogDb') CREATE DATABASE LogDb"
 ```
 
 4. **Apply Database Migrations:**
@@ -48,6 +56,9 @@ dotnet ef migrations add InitialCreate -p src/AuthService/AuthService.Infrastruc
 
 # For ProductService
 dotnet ef migrations add InitialCreate -p src/ProductService/ProductService.Infrastructure -s src/ProductService/ProductService.API
+
+# For LogService
+dotnet ef migrations add InitialCreate -p src/LogService/LogService.Infrastructure -s src/LogService/LogService.API
 ```
 
 *Second, apply the migrations to update the databases:*
@@ -57,6 +68,9 @@ dotnet ef database update -p src/AuthService/AuthService.Infrastructure -s src/A
 
 # Update ProductDb
 dotnet ef database update -p src/ProductService/ProductService.Infrastructure -s src/ProductService/ProductService.API
+
+# Update LogDb
+dotnet ef database update -p src/LogService/LogService.Infrastructure -s src/LogService/LogService.API
 ```
 
 ### 🚀 Running Individual Services
