@@ -25,6 +25,10 @@ public static class DependencyInjection
             x.AddConsumer<ProductCreatedConsumer>();
             x.AddConsumer<ProductUpdatedConsumer>();
             x.AddConsumer<ProductDeletedConsumer>();
+            x.AddConsumer<UserRegisteredConsumer>();
+            x.AddConsumer<UserLoggedInConsumer>();
+            x.AddConsumer<TokenRefreshedConsumer>();
+            x.AddConsumer<UserLoggedOutConsumer>();
 
             x.UsingRabbitMq((ctx, cfg) =>
             {
@@ -43,6 +47,14 @@ public static class DependencyInjection
                     e.ConfigureConsumer<ProductCreatedConsumer>(ctx);
                     e.ConfigureConsumer<ProductUpdatedConsumer>(ctx);
                     e.ConfigureConsumer<ProductDeletedConsumer>(ctx);
+                });
+
+                cfg.ReceiveEndpoint("log-service-auth-events", e =>
+                {
+                    e.ConfigureConsumer<UserRegisteredConsumer>(ctx);
+                    e.ConfigureConsumer<UserLoggedInConsumer>(ctx);
+                    e.ConfigureConsumer<TokenRefreshedConsumer>(ctx);
+                    e.ConfigureConsumer<UserLoggedOutConsumer>(ctx);
                 });
             });
         });

@@ -3,6 +3,7 @@ using AuthService.Application.DTOs;
 using AuthService.Application.Interfaces.Repositories;
 using AuthService.Application.Interfaces.Services;
 using MediatR;
+using Shared.Events.Auth;
 
 namespace AuthService.Application.Features.Auth.Commands.Login;
 
@@ -11,15 +12,18 @@ public class LoginCommandHandler : IRequestHandler<LoginCommand, Result<AuthResp
     private readonly IUserRepository _userRepo;
     private readonly ITokenService _tokenService;
     private readonly ICookieService _cookieService;
+    private readonly IEventPublisherService _eventService;
 
     public LoginCommandHandler(
-        IUserRepository userRepo,
-        ITokenService tokenService,
-        ICookieService cookieService)
+        IUserRepository _userRepo,
+        ITokenService _tokenService,
+        ICookieService _cookieService,
+        IEventPublisherService eventService)
     {
-        _userRepo = userRepo;
-        _tokenService = tokenService;
-        _cookieService = cookieService;
+        this._userRepo = _userRepo;
+        this._tokenService = _tokenService;
+        this._cookieService = _cookieService;
+        _eventService = eventService;
     }
 
     public async Task<Result<AuthResponseDto>> Handle(LoginCommand request, CancellationToken ct)
@@ -48,6 +52,11 @@ public class LoginCommandHandler : IRequestHandler<LoginCommand, Result<AuthResp
         var cookieResult = await _cookieService.AppendCookies(accessTokenResult.Data!, refreshTokenResult.Data!.UnhashedToken);
         if (!cookieResult.IsSuccess)
             return Result<AuthResponseDto>.Failure(cookieResult.ErrorMessage!);
+
+        await _eventService.PublishAsync(new UserLoggedInEvent(
+            user.Id,
+            user.Email,
+            now), ct);
 
         return Result<AuthResponseDto>.Success(new AuthResponseDto
         {

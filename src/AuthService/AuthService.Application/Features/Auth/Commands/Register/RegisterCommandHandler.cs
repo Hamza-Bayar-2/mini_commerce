@@ -5,6 +5,7 @@ using AuthService.Domain.Entities;
 using MediatR;
 using AuthService.Application.Common.Models;
 using AuthService.Domain.Enums;
+using Shared.Events.Auth;
 
 namespace AuthService.Application.Features.Auth.Commands.Register;
 
@@ -14,17 +15,20 @@ public class RegisterCommandHandler : IRequestHandler<RegisterCommand, Result<Au
     private readonly IRoleRepository _roleRepo;
     private readonly ITokenService _tokenService;
     private readonly ICookieService _cookieService;
+    private readonly IEventPublisherService _eventService;
 
     public RegisterCommandHandler(
       IUserRepository userRepo,
       IRoleRepository roleRepo,
       ITokenService tokenService,
-      ICookieService cookieService)
+      ICookieService cookieService,
+      IEventPublisherService eventService)
     {
         _userRepo = userRepo;
         _roleRepo = roleRepo;
         _tokenService = tokenService;
         _cookieService = cookieService;
+        _eventService = eventService;
     }
 
     public async Task<Result<AuthResponseDto>> Handle(RegisterCommand request, CancellationToken ct)
@@ -65,6 +69,12 @@ public class RegisterCommandHandler : IRequestHandler<RegisterCommand, Result<Au
         var cookieResult = await _cookieService.AppendCookies(accessResult.Data!, refreshResult.Data!.UnhashedToken);
         if (!cookieResult.IsSuccess)
             return Result<AuthResponseDto>.Failure(cookieResult.ErrorMessage!);
+
+        await _eventService.PublishAsync(new UserRegisteredEvent(
+            user.Id,
+            user.Email,
+            $"{user.FirstName} {user.LastName}",
+            user.CreatedAt!.Value), ct);
 
         return Result<AuthResponseDto>.Success(new AuthResponseDto
         {

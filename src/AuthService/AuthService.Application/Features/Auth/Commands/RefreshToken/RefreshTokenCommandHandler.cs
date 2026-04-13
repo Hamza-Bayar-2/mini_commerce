@@ -3,6 +3,7 @@ using AuthService.Application.DTOs;
 using AuthService.Application.Interfaces.Services;
 using AuthService.Application.Interfaces.Repositories;
 using MediatR;
+using Shared.Events.Auth;
 
 namespace AuthService.Application.Features.Auth.Commands.RefreshToken;
 
@@ -11,15 +12,18 @@ public class RefreshTokenCommandHandler : IRequestHandler<RefreshTokenCommand, R
     private readonly IUserRepository _userRepo;
     private readonly ITokenService _tokenService;
     private readonly ICookieService _cookieService;
+    private readonly IEventPublisherService _eventService;
 
     public RefreshTokenCommandHandler(
         IUserRepository userRepo,
         ITokenService tokenService,
-        ICookieService cookieService)
+        ICookieService cookieService,
+        IEventPublisherService eventService)
     {
         _userRepo = userRepo;
         _tokenService = tokenService;
         _cookieService = cookieService;
+        _eventService = eventService;
     }
     public async Task<Result<AuthResponseDto>> Handle(RefreshTokenCommand request, CancellationToken ct)
     {
@@ -50,6 +54,10 @@ public class RefreshTokenCommandHandler : IRequestHandler<RefreshTokenCommand, R
         var cookieResult = await _cookieService.AppendCookies(accessResult.Data!, refreshResult.Data!.UnhashedToken);
         if (!cookieResult.IsSuccess)
             return Result<AuthResponseDto>.Failure(cookieResult.ErrorMessage!);
+
+        await _eventService.PublishAsync(new TokenRefreshedEvent(
+            user.Id, 
+            now), ct);
 
         return Result<AuthResponseDto>.Success(new AuthResponseDto
         {
