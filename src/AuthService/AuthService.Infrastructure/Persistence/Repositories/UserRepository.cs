@@ -14,6 +14,7 @@ public class UserRepository : GenericRepository<User>, IUserRepository
     public async Task<User?> GetByEmailAsync(string email, CancellationToken ct)
           => await _db.Users
               .Include(u => u.UserCredential)
+              .Include(u => u.Roles)
               .FirstOrDefaultAsync(u => u.Email == email, ct);
 
     public async Task<User?> GetUserInfoAsync(Guid userId, CancellationToken ct)

@@ -39,7 +39,7 @@ public class RegisterCommandHandler : IRequestHandler<RegisterCommand, Result<Au
 
         var now = DateTime.UtcNow;
 
-        var roles = await _roleRepo.GetRolesByIdsAsync([(short)Roles.CUSTOMER], ct);
+        var roles = await _roleRepo.GetRolesByIdsAsync([(short)Roles.CUSTOMER, (short)Roles.SELLER], ct);
 
         var user = new User
         {

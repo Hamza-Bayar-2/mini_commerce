@@ -1,9 +1,9 @@
 using ProductService.Infrastructure;
 using ProductService.Application;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
-using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using System.Text;
+using System.Security.Claims;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -30,7 +30,8 @@ builder.Services.AddAuthentication(options =>
         ValidateIssuerSigningKey = true,
         IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtKey)),
         ValidateLifetime = true,
-        ClockSkew = TimeSpan.Zero
+        ClockSkew = TimeSpan.Zero,
+        RoleClaimType = ClaimTypes.Role
     };
 
     options.Events = new JwtBearerEvents
@@ -51,9 +52,9 @@ builder.Services.AddAuthentication(options =>
 builder.Services.AddAuthorization(options =>
 {
     options.AddPolicy("SellerOrAdmin", policy =>
-        policy.RequireRole("SELLER", "ADMIN"));
+        policy.RequireRole("seller", "admin"));
     options.AddPolicy("AdminOnly", policy =>
-        policy.RequireRole("ADMIN"));
+        policy.RequireRole("admin"));
 });
 
 builder.Services.AddOpenApi();
@@ -72,8 +73,6 @@ if (app.Environment.IsDevelopment())
     app.UseSwagger();
     app.UseSwaggerUI();
 }
-
-app.UseHttpsRedirection();
 
 app.UseAuthentication();
 app.UseAuthorization();
