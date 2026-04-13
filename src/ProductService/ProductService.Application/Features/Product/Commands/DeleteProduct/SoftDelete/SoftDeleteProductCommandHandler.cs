@@ -24,11 +24,14 @@ public class SoftDeleteProductCommandHandler : IRequestHandler<SoftDeleteProduct
         if (!result.IsSuccess)
             return result;
 
-        await _eventService.PublishAsync(new ProductDeletedEvent(
+        var eventResult = await _eventService.PublishAsync(new ProductDeletedEvent(
             result.Data!.Id!.Value,
             result.Data.Name!,
             result.Data.Stock!.Value,
             result.Data.DeletedAt!.Value), ct);
+
+        if (!eventResult.IsSuccess)
+            return Result<ProductResponseDto>.Failure($"Ürün silindi ancak log servisi şu an ayakta olmadığı için kaydedilemedi. Hata: {eventResult.ErrorMessage}");
 
         return result;
     }

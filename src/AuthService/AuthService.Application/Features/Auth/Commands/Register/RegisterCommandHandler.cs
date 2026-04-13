@@ -70,11 +70,14 @@ public class RegisterCommandHandler : IRequestHandler<RegisterCommand, Result<Au
         if (!cookieResult.IsSuccess)
             return Result<AuthResponseDto>.Failure(cookieResult.ErrorMessage!);
 
-        await _eventService.PublishAsync(new UserRegisteredEvent(
+        var eventResult = await _eventService.PublishAsync(new UserRegisteredEvent(
             user.Id,
             user.Email,
             $"{user.FirstName} {user.LastName}",
             user.CreatedAt!.Value), ct);
+
+        if (!eventResult.IsSuccess)
+            return Result<AuthResponseDto>.Failure($"Kayıt yapıldı ancak log servisi şu an ayakta olmadığı için kaydedilemedi. Hata: {eventResult.ErrorMessage}");
 
         return Result<AuthResponseDto>.Success(new AuthResponseDto
         {

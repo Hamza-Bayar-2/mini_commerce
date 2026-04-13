@@ -51,9 +51,12 @@ public class LogoutCommandHandler : IRequestHandler<LogoutCommand, Result<Unit>>
 
         if (userId.HasValue)
         {
-            await _eventService.PublishAsync(new UserLoggedOutEvent(
+            var eventResult = await _eventService.PublishAsync(new UserLoggedOutEvent(
                 userId.Value,
                 DateTime.UtcNow), ct);
+
+            if (!eventResult.IsSuccess)
+                return Result<Unit>.Failure($"Çıkış yapıldı ancak log servisi şu an ayakta olmadığı için kaydedilemedi. Hata: {eventResult.ErrorMessage}");
         }
 
         return Result<Unit>.Success(Unit.Value);

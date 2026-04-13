@@ -24,11 +24,14 @@ public class HardDeleteProductCommandHandler : IRequestHandler<HardDeleteProduct
         if (!result.IsSuccess)
             return result;
 
-        await _eventService.PublishAsync(new ProductHardDeletedEvent(
+        var eventResult = await _eventService.PublishAsync(new ProductHardDeletedEvent(
             result.Data!.Id!.Value,
             result.Data.Name!,
             result.Data.Stock!.Value,
             DateTime.UtcNow), ct);
+
+        if (!eventResult.IsSuccess)
+            return Result<ProductResponseDto>.Failure($"Ürün kalıcı olarak silindi ancak log servisi şu an ayakta olmadığı için kaydedilemedi. Hata: {eventResult.ErrorMessage}");
 
         return result;
     }

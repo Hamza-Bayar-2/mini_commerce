@@ -1,5 +1,6 @@
 using MassTransit;
 using AuthService.Application.Interfaces.Services;
+using AuthService.Application.Common.Models;
 
 namespace AuthService.Infrastructure.Services;
 
@@ -12,8 +13,23 @@ public class EventPublisherService : IEventPublisherService
         _publishEndpoint = publishEndpoint;
     }
 
-    public async Task PublishAsync<T>(T @event, CancellationToken ct) where T : class
+    public async Task<Result<bool>> PublishAsync<T>(T @event, CancellationToken ct) where T : class
     {
-        await _publishEndpoint.Publish(@event, ct);
+        try
+        {
+            using var timeoutCts = CancellationTokenSource.CreateLinkedTokenSource(ct);
+            timeoutCts.CancelAfter(TimeSpan.FromSeconds(2));
+
+            await _publishEndpoint.Publish(@event, timeoutCts.Token);
+            return Result<bool>.Success(true);
+        }
+        catch (OperationCanceledException)
+        {
+            return Result<bool>.Failure("Log servisi (RabbitMQ) zaman aşımına uğradı. Bağlantı kurulamıyor.");
+        }
+        catch (Exception)
+        {
+            return Result<bool>.Failure("Log servisi (RabbitMQ) şu an ayakta değil.");
+        }
     }
 }

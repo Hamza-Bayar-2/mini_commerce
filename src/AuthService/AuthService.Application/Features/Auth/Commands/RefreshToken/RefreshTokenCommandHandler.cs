@@ -55,9 +55,13 @@ public class RefreshTokenCommandHandler : IRequestHandler<RefreshTokenCommand, R
         if (!cookieResult.IsSuccess)
             return Result<AuthResponseDto>.Failure(cookieResult.ErrorMessage!);
 
-        await _eventService.PublishAsync(new TokenRefreshedEvent(
+        var eventResult = await _eventService.PublishAsync(new TokenRefreshedEvent(
             user.Id, 
             now), ct);
+
+        if (!eventResult.IsSuccess)
+            return Result<AuthResponseDto>.Failure($"Token yenilendi ancak log servisi şu an ayakta olmadığı için kaydedilemedi. Hata: {eventResult.ErrorMessage}");
+        
 
         return Result<AuthResponseDto>.Success(new AuthResponseDto
         {

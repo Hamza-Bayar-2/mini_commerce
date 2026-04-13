@@ -35,11 +35,14 @@ public class UpdateProductCommandHandler : IRequestHandler<UpdateProductCommand,
         if (!productResult.IsSuccess)
             return productResult;
 
-        await _eventService.PublishAsync(new ProductUpdatedEvent(
+        var eventResult = await _eventService.PublishAsync(new ProductUpdatedEvent(
             productResult.Data!.Id!.Value,
             productResult.Data.Name!,
             productResult.Data.Stock!.Value,
             productResult.Data.UpdatedAt!.Value), ct);
+
+        if (!eventResult.IsSuccess)
+            return Result<ProductResponseDto>.Failure($"Ürün güncellendi ancak log servisi şu an ayakta olmadığı için kaydedilemedi. Hata: {eventResult.ErrorMessage}");
 
         return productResult;
     }

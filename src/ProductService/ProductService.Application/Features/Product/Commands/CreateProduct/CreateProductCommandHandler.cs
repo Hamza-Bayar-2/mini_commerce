@@ -34,11 +34,15 @@ public class CreateProductCommandHandler : IRequestHandler<CreateProductCommand,
         if (!productResult.IsSuccess)
             return productResult;
 
-        await _eventService.PublishAsync(new ProductCreatedEvent(
+        var eventResult = await _eventService.PublishAsync(new ProductCreatedEvent(
             productResult.Data!.Id!.Value,
             productResult.Data.Name!,
             productResult.Data.Stock!.Value,
             productResult.Data.CreatedAt!.Value), ct);
+
+        if (!eventResult.IsSuccess)
+            return Result<ProductResponseDto>.Failure($"Ürün oluşturuldu ancak log servisi şu an ayakta olmadığı için kaydedilemedi. Hata: {eventResult.ErrorMessage}");
+        
 
         return productResult;
     }
