@@ -1,3 +1,7 @@
+# Documentation
+
+Bu dokümantasyon; projede tercih edilen teknoloji yığınını, kullanılan araçları ve tasarım desenlerini; ayrıca bu bileşenlerin sistem mimarisine nasıl entegre edildiğini detaylandırmaktadır.
+
 ## ٍServisler (Current Services)
 - **Auth Service** — JWT token üretimi, refresh token
 - **Product Service** — CQRS, Redis cache, event publishing
@@ -29,6 +33,10 @@
   - **Amaç:** Veritabanından veri okuma işlemleri (Query - Get) ile veritabanını değiştiren işlemleri (Command - Post/Put/Delete) birbirinden tamamen ayırmak.
   - **Avantajı:** Okuma ve yazma işlemlerinin farklı veri modelleri ve performans gereksinimlerine göre bağımsız olarak optimize edilebilmesini sağlar. Sınıflar küçülür (Single Responsibility). MediatR kullanımı sayesinde ise Controller sınıfları tamamen zayıflar (Thin Controllers) ve iş mantığı (business logic) Handler sınıfları içerisinde encapsulate edilir.
 
+- **Result Pattern** — Hata Kontrolü ve Akış Yönetimi
+  - **Amaç:** Application katmanında oluşan hataları veya başarılı durumları standart bir yapı içinde (`Result<T>` veya `Result`) Controller'a dönmek. Kod akışını kontrol etmek (flow control) için "Exception" (istisna fırlatma) mekanizmasını kullanmaktan kaçınmak.
+  - **Avantajı:** Exception fırlatmak sistem belleği ve performansı açısından maliyetlidir (stack trace oluşturulduğu için). Result Pattern ile iş mantığındaki (business logic) hatalar nesne tabanlı ve performanslı bir şekilde ele alınır. İstemciye (client) dönülecek HTTP Status kodları (404 Not Found, 400 Bad Request vb.) bu yapı sayesinde Controller'da çok daha temiz ve okunaklı bir şekilde kontrol edilir.
+
 - **Repository Pattern** — Veri Erişim Soyutlaması
   - **Amaç:** Veritabanı (Data Access) işlemlerini merkezi bir yerde toplayarak servis katmanından soyutlamak.
   - **Avantajı:** Yarın farklı bir ORM'e (örneğin EF Core yerine Dapper) veya farklı bir veritabanına geçilmek istendiğinde projenin diğer katmanlarına dokunmadan sadece Repository sınıflarının güncellenmesi yeterli olur. Arayüzler (Interface) kullanıldığı için projeye bir Mock Data ekleyerek iş birimlerini test etmek inanılmaz derecede kolaylaşır.
@@ -38,8 +46,8 @@
   - **Avantajı:** "Open/Closed Principle"a %100 uyar. Kod değişime kapalı, gelişime açıktır. Ana veri çekme kodunun içerisine "Önce Redis'e bak, yoksa DB'den al" if-else mantığını bulaştırmamış oluruz.
 
 - **Pipeline Behaviors** — Merkezi Çapraz Kesen Mantıklar (Cross-Cutting Concerns)
-  - **Amaç:** MediatR araya girme mekanizmasını (Interceptor) kullanarak, istekler (requests) Handler'a ulaşmadan önce veya sonra çalışacak kurallar (Validation, Transaction, Logging) tanımlamak.
-  - **Avantajı:** Geliştiricinin her servis (Handler) içerisine tek tek try-catch yazması, transaction başlatıp commit/rollback yapması veya parametre doğrulama (Validation) kodları yazması engellenir. "Boilerplate" kodlardan kurtulunur; kod daha temiz ve iş mantığına odaklı kalır.
+  - **Amaç:** MediatR araya girme mekanizmasını (Interceptor) kullanarak, istekler (requests) Handler'a ulaşmadan önce veya sonra çalışacak kurallar (Validation, Transaction, Logging) tanımlamak. `ICommand<T>` ve `IQuery<T>` ayrımlarının kullanılması.
+  - **Avantajı:** Geliştiricinin her servis (Handler) içerisine tek tek try-catch yazması, transaction başlatıp commit/rollback yapması veya parametre doğrulama (Validation) kodları yazması engellenir. "Boilerplate" kodlardan kurtulunur. Özel arayüzler (`ICommand`) kullanıldığında TransactionBehavior sadece veri değiştiren komutlarda otomatik Transaction yönetimi sağlar.
 
 - **Event-Driven Architecture** — RabbitMQ ile Gevşek Bağlılık (Loose Coupling)
   - **Amaç:** Mikroservislerin birbirleriyle doğrudan konuşması (Senkron HTTP Iletişimi) yerine, ortak bir kuyruk üzerinden asenkron event (olay) bazlı haberleşmesi.
@@ -59,6 +67,14 @@
   - Veritabanı ID'leri, kod içerisinde manuel olarak set edilmek yerine, Entity (Varlık) constructor'ları içerisinde otomatik olarak oluşturulmaktadır. 
   - Bu sayede kod bütünlüğü korunur, geliştirici kaynaklı kimlik oluşturma unutkanlıkları ortadan kalkar ve yaratım kuralları Domain nesnesine encapsulate olur.
 
+- **Dependency Injection (DI) Yönetimi**
+  - Kod boyunca Primary Constructors yerine standart constructor injection kullanımı tercih edilmiş olup, DI servisleri private readonly ve alt çizgi (`_`) ön ekiyle tanımlanmıştır (ör. `_userRepository`).
+  - Bu standartlaşma, kod tabanı üzerinde tutarlılık sağlar ve Dependency Injection mekanizmasının daha okunaklı ve sürdürülebilir bir yapıda kalmasına yardımcı olur.
+
+- **Asenkron İptal Mekanizmaları - CancellationToken (CT)**
+  - Tüm asenkron API endpoint'lerinden başlayarak Repository seviyesindeki (veri tabanı işlemleri) fonksiyonlara kadar `CancellationToken` aktarımı eksiksiz yapılmıştır.
+  - İstemciler işlemlerini yarıda kestiğinde, CancellationToken sayesinde gereksiz veritabanı yorması engellenir, thread ve kaynak (memory) tasarrufu sağlanır.
+
 - **Refresh Token Yenileme Sistemi**
   - Kullanıcının JWT (Access Token) yetki süresi dolduğunda veya token geçersiz kaldığında, ön yüzden otomatik olarak `refresh` endpoint'i çağrılır. Bu endpoint yetki doğrulaması (auth) gerektirmediği için sorunsuz çalışır.
   - Güvenlik sebebiyle HttpOnly Cookie içerisinde saklanan Refresh Token kullanılarak kullanıcının oturumu kapanmadan arka planda yeni bir Refresh Token ve JWT üretilir. Ardından bu yeni token'lar tekrar cookie'ye kaydedilerek kullanıcıya kesintisiz ve güvenli bir erişim sağlanır.
@@ -76,7 +92,7 @@
 > 🚀 **Base URL İskeleti:** Tüm dış istekler Gateway üzerinden geçmelidir. Gateway varsayılan olarak `http://localhost:5292` portunda dinlemektedir.  
 > **İstek Yapısı:** `http://localhost:5292/api/{controller}/{endpoint}/{parametreler}`
 > 
-> **Örnek İstek (Tüm Ürünleri Getir):** `GET https://localhost:5292/api/products`
+> **Örnek İstek (Id ile ürün getir):** `GET https://localhost:5292//api/product/{id}`
 
 ### Auth Service
 | Method | Endpoint | Açıklama | Auth |
@@ -88,11 +104,12 @@
 ### Product Service
 | Method | Endpoint | Açıklama | Auth |
 |--------|----------|----------|------|
-| GET | /api/products | Tüm ürünleri listele | Hayır |
-| GET | /api/products/{id} | Ürün detayı | Hayır |
-| POST | /api/products | Ürün ekle | Evet |
-| PUT | /api/products/{id} | Ürün güncelle | Evet |
-| DELETE | /api/products/{id} | Ürün sil | Evet |
+| GET | /api/product/{id} | Ürün detayı | Hayır |
+| GET | /api/product/name/{product_name} | Ürün detayı | Hayır |
+| POST | /api/product | Ürün ekle | Evet |
+| PUT | /api/product/{id} | Ürün güncelle | Evet |
+| DELETE | /api/product/hard-delete/{id} | Ürün sil | Evet |
+| DELETE | /api/product/soft-delete/{id} | Ürün sil | Evet |
 
 ### Log Service
 | Method | Endpoint | Açıklama | Auth |
