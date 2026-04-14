@@ -101,3 +101,17 @@ Records products(id, status_id, name, description, stock, created_at, updated_at
   3, 5, 'MacBook Air M2', '8GB RAM 256GB SSD', 23445, '2026-05-08', null, null
 }
 
+/// ========> Log <========
+
+Table log {
+  id uuid [pk, default: `gen_random_uuid()`]
+  message text [not null]
+  service_name int [not null]
+  created_at timestamp [default: `now()`]
+}
+
+Records log(id, message, service_name, created_at) {
+  1, 'register', 'auth_service', '2026-02-08'
+  2, 'product cteated', 'product_service', '2026-05-08'
+  3, 'product deleted', 'product_service', '2026-06-08'
+}
