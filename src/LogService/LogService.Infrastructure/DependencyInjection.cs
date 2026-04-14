@@ -29,6 +29,7 @@ public static class DependencyInjection
             x.AddConsumer<UserLoggedInConsumer>();
             x.AddConsumer<TokenRefreshedConsumer>();
             x.AddConsumer<UserLoggedOutConsumer>();
+            x.AddConsumer<ErrorOccurredConsumer>();
 
             x.UsingRabbitMq((ctx, cfg) =>
             {
@@ -55,6 +56,11 @@ public static class DependencyInjection
                     e.ConfigureConsumer<UserLoggedInConsumer>(ctx);
                     e.ConfigureConsumer<TokenRefreshedConsumer>(ctx);
                     e.ConfigureConsumer<UserLoggedOutConsumer>(ctx);
+                });
+
+                cfg.ReceiveEndpoint("log-service-error-events", e =>
+                {
+                    e.ConfigureConsumer<ErrorOccurredConsumer>(ctx);
                 });
             });
         });

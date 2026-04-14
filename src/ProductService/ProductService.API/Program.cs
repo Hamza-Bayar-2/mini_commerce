@@ -1,5 +1,6 @@
 using ProductService.Infrastructure;
 using ProductService.Application;
+using ProductService.API.Middleware;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
 using System.Text;
@@ -8,6 +9,8 @@ using System.Security.Claims;
 var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddControllers();
+
+builder.Services.AddTransient<ErrorMiddleware>();
 
 // JWT Ayarları (AuthService ile aynı Key ve Issuer kullanılmalı ki tokenlar burada da geçerli olsun)
 var jwtKey = builder.Configuration["JwtSettings:Key"] ?? "ThisIsASecretKeyForDevOnly!ChangeIt";
@@ -73,6 +76,8 @@ if (app.Environment.IsDevelopment())
     app.UseSwagger();
     app.UseSwaggerUI();
 }
+
+app.UseMiddleware<ErrorMiddleware>();
 
 app.UseAuthentication();
 app.UseAuthorization();

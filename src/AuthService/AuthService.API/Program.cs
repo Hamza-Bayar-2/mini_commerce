@@ -1,5 +1,6 @@
 using AuthService.Application;
 using AuthService.Infrastructure;
+using AuthService.API.Middleware;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
@@ -9,6 +10,9 @@ var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
 builder.Services.AddControllers();
+
+// Middleware
+builder.Services.AddTransient<ErrorMiddleware>();
 
 // JWT Authentication configuration
 var jwtKey = builder.Configuration["JwtSettings:Key"] ?? "ThisIsASecretKeyForDevOnly!ChangeIt";
@@ -67,6 +71,8 @@ if (app.Environment.IsDevelopment())
     app.UseSwagger();
     app.UseSwaggerUI();
 }
+
+app.UseMiddleware<ErrorMiddleware>();
 
 app.UseAuthentication();
 app.UseAuthorization();
