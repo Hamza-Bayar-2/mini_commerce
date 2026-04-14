@@ -8,6 +8,8 @@ public class Log
     }
     public Guid Id { get; set; }
 
+    public string? Level { get; set; }
+
     public string Message { get; set; } = null!;
 
     public string ServiceName { get; set; } = null!;

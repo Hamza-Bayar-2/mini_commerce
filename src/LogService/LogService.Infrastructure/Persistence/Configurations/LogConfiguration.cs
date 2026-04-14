@@ -16,6 +16,11 @@ public sealed class LogConfiguration : IEntityTypeConfiguration<Log>
             .HasDefaultValueSql("NEWID()")
             .HasColumnName("id");
 
+        builder.Property(e => e.Level)
+            .HasMaxLength(20)
+            .HasColumnName("level")
+            .HasDefaultValue("INFO");
+
         builder.Property(e => e.Message)
             .IsRequired()
             .HasColumnName("message");
