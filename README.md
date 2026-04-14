@@ -1,6 +1,6 @@
 # Mini Commerce Project
 
-A microservices-based e-commerce application built with .NET 10.
+A microservices-based e-commerce application built with **.NET 10**.
 Implements `Onion Architecture`, `CQRS pattern`, `JWT authentication`,
 `Redis caching`, `RabbitMQ event-driven messaging`, and `YARP API Gateway.
 
@@ -45,7 +45,7 @@ docker exec -it sqlserver_db /opt/mssql-tools18/bin/sqlcmd -S localhost -U sa -P
 
 4. **Apply Database Migrations:**
    
-The following commands should be executed in the **VS Code Terminal**:
+The following commands should be executed in the **VS Code Terminal**. All commands are designed to be run directly from the project root directory (`mini_commerce`):
 
 *First, generate the initial migrations (if not already done):*
 ```powershell
