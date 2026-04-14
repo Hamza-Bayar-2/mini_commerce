@@ -14,6 +14,8 @@ Check out the documentation of the project:
 To run the services, you must first ensure the database is running.
 
 ### 🐳 Running the Dependencies (Docker)
+Ensure Docker Desktop is running. The following commands should be executed in your **system terminal** (Command Prompt, Terminal, or PowerShell):
+
 1. **Create and start the SQL Server instance:**
 ```bash
 docker run -e "ACCEPT_EULA=Y" -e "MSSQL_SA_PASSWORD=StrongPass123" -p 1433:1433 --name sqlserver_db -d mcr.microsoft.com/mssql/server:2022-latest
@@ -42,7 +44,8 @@ docker exec -it sqlserver_db /opt/mssql-tools18/bin/sqlcmd -S localhost -U sa -P
 ```
 
 4. **Apply Database Migrations:**
-Before running the services, you must create and apply the initial migrations to set up the database tables for both services.
+   
+The following commands should be executed in the **VS Code Terminal**:
 
 *First, generate the initial migrations (if not already done):*
 ```powershell
@@ -69,7 +72,7 @@ dotnet ef database update -p src/LogService/LogService.Infrastructure -s src/Log
 ```
 
 ### 🚀 Running Individual Services
-Open a terminal for each service and run:
+Open a **VS Code Terminal** for each service and run:
 
 ```bash
 # AuthService (Port: 5121)
