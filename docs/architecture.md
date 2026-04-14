@@ -114,6 +114,44 @@ dotnet add LogService.API/LogService.API.csproj package Swashbuckle.AspNetCore
 
 ---
 
+## Useful Commands
+
+### 📦 NuGet Package Management
+To add a package to a specific project:
+```powershell
+dotnet add src/AuthService/AuthService.Infrastructure package Microsoft.EntityFrameworkCore.SqlServer
+```
+
+### 🛠 Entity Framework Core Migrations
+Commands must be run from the infrastructure project directory or by specifying paths.
+
+**Add a new migration:**
+```powershell
+dotnet ef migrations add <MigrationName> -p src/AuthService/AuthService.Infrastructure -s src/AuthService/AuthService.API
+```
+
+**Remove the last migration (before updating DB):**
+```powershell
+dotnet ef migrations remove -p src/AuthService/AuthService.Infrastructure -s src/AuthService/AuthService.API
+```
+
+**Apply migrations to the database (Update Database):**
+```powershell
+dotnet ef database update -p src/AuthService/AuthService.Infrastructure -s src/AuthService/AuthService.API
+```
+
+**Generate SQL Script from migrations:**
+```powershell
+dotnet ef migrations script -p src/AuthService/AuthService.Infrastructure -s src/AuthService/AuthService.API
+```
+
+### 🧪 Testing
+To run all tests in the solution:
+```powershell
+dotnet test
+```
+---
+
 ## Important Rules & Gotchas
 
 ### MediatR & Transactions
