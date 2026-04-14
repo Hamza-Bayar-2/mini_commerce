@@ -11,5 +11,6 @@ public interface IProductService
     Task<Result<ProductResponseDto>> HardDeleteProductAsync(Guid id, CancellationToken ct);
     Task<Result<ProductResponseDto>> GetProductByIdAsync(Guid id, CancellationToken ct);
     Task<Result<ProductResponseDto>> GetProductByNameAsync(string name, CancellationToken ct);
+    Task<Result<IEnumerable<ProductResponseDto>>> GetAllProductsAsync(CancellationToken ct);
 }
 

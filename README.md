@@ -85,6 +85,12 @@ dotnet run --project src/LogService/LogService.API/LogService.API.csproj --launc
 dotnet run --project src/Gateway/Gateway.API/Gateway.API.csproj --launch-profile https
 ```
 
+### 🌐 API Gateway Usage
+All external client requests must be routed through the API Gateway. The base URL structure is:
+`https://localhost:5292/api/{controller}/{endpoint}`
+
+*Example:* `GET https://localhost:5292/api/product`
+
 ### Accessing Swagger
 Once the services are running, you can access the Swagger UI at:
 - **AuthService:** [https://localhost:5121/swagger](https://localhost:5121/swagger)

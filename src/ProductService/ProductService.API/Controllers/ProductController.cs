@@ -5,6 +5,7 @@ using ProductService.Application.Features.Product.Commands.CreateProduct;
 using ProductService.Application.Features.Product.Commands.UpdateProduct;
 using ProductService.Application.Features.Product.Commands.DeleteProduct.SoftDelete;
 using ProductService.Application.Features.Product.Commands.DeleteProduct.HardDelete;
+using ProductService.Application.Features.Product.Queries.GetAllProducts;
 using ProductService.Application.Features.Product.Queries.GetProductById;
 using ProductService.Application.Features.Product.Queries.GetProductByName;
 
@@ -80,6 +81,17 @@ public class ProductController : ControllerBase
         var result = await _mediator.Send(new GetProductByNameQuery(name));
         if (!result.IsSuccess)
             return NotFound(new { Error = result.ErrorMessage });
+
+        return Ok(result.Data);
+    }
+    
+    [HttpGet]
+    [AllowAnonymous]
+    public async Task<IActionResult> GetAllProductsAsync(CancellationToken ct)
+    {
+        var result = await _mediator.Send(new GetAllProductsQuery(), ct);
+        if (!result.IsSuccess)
+            return BadRequest(new { Error = result.ErrorMessage });
 
         return Ok(result.Data);
     }

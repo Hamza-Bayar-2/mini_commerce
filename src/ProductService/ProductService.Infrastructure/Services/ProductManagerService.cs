@@ -105,4 +105,14 @@ public class ProductManagerService : IProductService
 
         return Result<ProductResponseDto>.Success(ProductMappings.MapToDto(product));
     }
+
+    public async Task<Result<IEnumerable<ProductResponseDto>>> GetAllProductsAsync(CancellationToken ct)
+    {
+        var products = await _productRepo.GetAllAsync(ct);
+        
+        var activeProducts = products.Where(p => !p.DeletedAt.HasValue);
+        var dtoList = activeProducts.Select(ProductMappings.MapToDto);
+        
+        return Result<IEnumerable<ProductResponseDto>>.Success(dtoList);
+    }
 }
