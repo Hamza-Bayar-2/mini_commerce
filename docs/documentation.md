@@ -104,6 +104,7 @@ Bu dokümantasyon; projede tercih edilen teknoloji yığınını, kullanılan ar
 ### Product Service
 | Method | Endpoint | Açıklama | Auth |
 |--------|----------|----------|------|
+| GET | /api/product/ | Tüm ürün detayları | Hayır |
 | GET | /api/product/{id} | Ürün detayı | Hayır |
 | GET | /api/product/name/{product_name} | Ürün detayı | Hayır |
 | POST | /api/product | Ürün ekle | Evet |
