@@ -38,7 +38,7 @@ public class RefreshTokenCommandHandler : IRequestHandler<RefreshTokenCommand, R
         if (!validationResult.IsSuccess)
             return Result<AuthResponseDto>.Failure(validationResult.ErrorMessage!);
 
-        var user = await _userRepo.GetByIdAsync(validationResult.Data!.UserId, ct);
+        var user = await _userRepo.GetUserInfoAsync(validationResult.Data!.UserId, ct);
 
         if (user == null)
             return Result<AuthResponseDto>.Failure("User not found in the data base");
