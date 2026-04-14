@@ -1,13 +1,13 @@
 /// ========> Kullanıcı <========
 
 Table users {
-  id uuid [pk, default: `gen_random_uuid()`]
+  id uuid [pk, default: `NEWID()`]
   first_name varchar(50) [not null]
   last_name varchar(50) [not null]
   email varchar(255) [unique, not null, note: 'Giriş anahtarı']
   phone_number varchar(20) [unique]
-  deleted_at timestamp [note: 'Soft delete uygulanan kayıtların silinme anı']
-  created_at timestamp [default: `now()`]
+  deleted_at datetime2 [note: 'Soft delete uygulanan kayıtların silinme anı']
+  created_at datetime2 [default: `GETUTCDATE()`]
 }
 
 Table roles {
@@ -30,20 +30,20 @@ Ref: roles.id < user_roles.role_id [update: restrict, delete: restrict]
 Table user_credentials {
   user_id uuid [pk]
   password_hash text [not null]
-  updated_at timestamp [default: `now()`]
+  updated_at datetime2 [default: `GETUTCDATE()`]
 }
 Ref: users.id - user_credentials.user_id [delete: cascade]
 
 Table user_refresh_tokens {
-  id uuid [pk, default: `gen_random_uuid()`]
+  id uuid [pk, default: `NEWID()`]
   user_id uuid [not null]
   token_hash text [not null]
   client_ip varchar(45)
-  expires_at timestamp [not null]
+  expires_at datetime2 [not null]
   is_revoked boolean [default: false, note: 'Güvenlik nedeniyle iptal edildi mi?']
   replaced_by uuid [note: 'Bu token yerine üretilen yeni token id']
-  last_used_at timestamp [default: `now()`]
-  created_at timestamp [default: `now()`]
+  last_used_at datetime2 [default: `GETUTCDATE()`]
+  created_at datetime2 [default: `GETUTCDATE()`]
 
   Indexes {
     token_hash [unique]
@@ -70,14 +70,14 @@ Records user_refresh_tokens(id, user_id, token_hash, expires_at, is_revoked, rep
 /// ========> Ürün <========
 
 Table products {
-  id uuid [pk, default: `gen_random_uuid()`]
+  id uuid [pk, default: `NEWID()`]
   status_id smallint [not null]
   name varchar(255) [not null]
   description text
   stock int [not null]
-  created_at timestamp [default: `now()`]
-  updated_at timestamp
-  deleted_at timestamp
+  created_at datetime2 [default: `GETUTCDATE()`]
+  updated_at datetime2
+  deleted_at datetime2
 }
 Ref: product_statuses.id < products.status_id [update: restrict, delete: restrict]
 
@@ -104,10 +104,10 @@ Records products(id, status_id, name, description, stock, created_at, updated_at
 /// ========> Log <========
 
 Table log {
-  id uuid [pk, default: `gen_random_uuid()`]
+  id uuid [pk, default: `NEWID()`]
   message text [not null]
   service_name int [not null]
-  created_at timestamp [default: `now()`]
+  created_at datetime2 [default: `GETUTCDATE()`]
 }
 
 Records log(id, message, service_name, created_at) {
