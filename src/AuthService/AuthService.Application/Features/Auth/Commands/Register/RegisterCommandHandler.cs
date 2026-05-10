@@ -5,37 +5,33 @@ using AuthService.Domain.Entities;
 using MediatR;
 using AuthService.Application.Common.Models;
 using AuthService.Domain.Enums;
-using Shared.Events.Auth;
 
 namespace AuthService.Application.Features.Auth.Commands.Register;
 
-public class RegisterCommandHandler : IRequestHandler<RegisterCommand, Result<AuthResponseDto>>
+public class RegisterCommandHandler : IRequestHandler<RegisterCommand, Result<RegisterResponseDto>>
 {
     private readonly IUserRepository _userRepo;
     private readonly IRoleRepository _roleRepo;
     private readonly ITokenService _tokenService;
     private readonly ICookieService _cookieService;
-    private readonly IEventPublisherService _eventService;
 
     public RegisterCommandHandler(
       IUserRepository userRepo,
       IRoleRepository roleRepo,
       ITokenService tokenService,
-      ICookieService cookieService,
-      IEventPublisherService eventService)
+      ICookieService cookieService)
     {
         _userRepo = userRepo;
         _roleRepo = roleRepo;
         _tokenService = tokenService;
         _cookieService = cookieService;
-        _eventService = eventService;
     }
 
-    public async Task<Result<AuthResponseDto>> Handle(RegisterCommand request, CancellationToken ct)
+    public async Task<Result<RegisterResponseDto>> Handle(RegisterCommand request, CancellationToken ct)
     {
         var existing = await _userRepo.GetByEmailAsync(request.Email, ct);
         if (existing is not null)
-            return Result<AuthResponseDto>.Failure("Email already exists.");
+            return Result<RegisterResponseDto>.Failure("Email already exists.");
 
         var now = DateTime.UtcNow;
 
@@ -62,25 +58,19 @@ public class RegisterCommandHandler : IRequestHandler<RegisterCommand, Result<Au
         var refreshResult = await _tokenService.GenerateRefreshTokenAsync(user.Id, null, now, ct);
 
         if (!accessResult.IsSuccess || !refreshResult.IsSuccess)
-            return Result<AuthResponseDto>.Failure("Token generation failed."
+            return Result<RegisterResponseDto>.Failure("Token generation failed."
             + accessResult.ErrorMessage + "\n"
             + refreshResult.ErrorMessage);
 
         var cookieResult = await _cookieService.AppendCookies(accessResult.Data!, refreshResult.Data!.UnhashedToken);
         if (!cookieResult.IsSuccess)
-            return Result<AuthResponseDto>.Failure(cookieResult.ErrorMessage!);
+            return Result<RegisterResponseDto>.Failure(cookieResult.ErrorMessage!);
 
-        var eventResult = await _eventService.PublishAsync(new UserRegisteredEvent(
-            user.Id,
-            user.Email,
-            $"{user.FirstName} {user.LastName}",
-            user.CreatedAt!.Value), ct);
-
-        if (!eventResult.IsSuccess)
-            return Result<AuthResponseDto>.Failure($"Kayıt yapıldı ancak log servisi şu an ayakta olmadığı için kaydedilemedi. Hata: {eventResult.ErrorMessage}");
-
-        return Result<AuthResponseDto>.Success(new AuthResponseDto
+        return Result<RegisterResponseDto>.Success(new RegisterResponseDto
         {
+            UserId = user.Id,
+            Email = user.Email,
+            FullName = $"{user.FirstName} {user.LastName}",
             AccessToken = accessResult.Data!,
             RefreshToken = refreshResult.Data!.UnhashedToken,
             RefreshTokenExpiresAt = refreshResult.Data!.Entity.ExpiresAt

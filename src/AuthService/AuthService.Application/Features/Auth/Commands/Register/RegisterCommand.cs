@@ -10,4 +10,4 @@ public record RegisterCommand(
     string Email,
     string Password,
     string ConfirmPassword,
-    string? PhoneNumber) : ICommand<Result<AuthResponseDto>>;
+    string? PhoneNumber) : ICommand<Result<RegisterResponseDto>>;

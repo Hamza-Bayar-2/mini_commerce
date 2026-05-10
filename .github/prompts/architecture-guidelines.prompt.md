@@ -90,3 +90,17 @@ For any entity that represents a fixed set of values (Lookup tables like Roles, 
 5.  **Execute Logic:** Use repository methods like `AddAsync` or `Update` to mutate state. Do **not** call arbitrary save methods.
 6.  **Dependency Injection (DI):** If you create a new Service or Repository, remember to register it in `DependencyInjection.cs` (e.g., `services.AddScoped<INewRepo, NewRepo>()`) under the respective layer (Application vs Infrastructure).
 7.  **DI Coding Pattern:** When injecting dependencies into Handlers or Services, you MUST use `private readonly` fields with an underscore prefix (e.g., `_userRepo`) and initialize them via a classic constructor. Do NOT use C# 12 Primary Constructors for dependency injection.
+
+## 6. Advanced Logging Strategy (Pipeline Behavior)
+
+We separate business logic from event publishing (logging) using a Strategy Pattern within a MediatR Pipeline Behavior.
+
+- **LoggingBehaviors<TRequest, TResponse>:** This open behavior intercepts all requests. It iterates through a collection of registered `ILoggingStrategy<TRequest, TResponse>` implementations.
+- **ILoggingStrategy<TRequest, TResponse>:**
+  - `bool CanHandle(TRequest request)`: Determines if the strategy applies to the current request.
+  - `Task PublishLogAsync(TRequest request, TResponse response, CancellationToken ct)`: Executes the logging/event publishing logic after a successful handler execution.
+- **Implementation Rules:**
+  - Do NOT call `IEventPublisherService` directly inside Command/Query Handlers. 
+  - Handlers should focus solely on the business operation.
+  - Create a specific strategy class under `PipelineBehaviors.Logging.LoggingStrategies` for each event you want to log.
+  - Register these strategies in `DependencyInjection.cs`.

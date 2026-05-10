@@ -12,18 +12,15 @@ public class LoginCommandHandler : IRequestHandler<LoginCommand, Result<AuthResp
     private readonly IUserRepository _userRepo;
     private readonly ITokenService _tokenService;
     private readonly ICookieService _cookieService;
-    private readonly IEventPublisherService _eventService;
 
     public LoginCommandHandler(
         IUserRepository _userRepo,
         ITokenService _tokenService,
-        ICookieService _cookieService,
-        IEventPublisherService eventService)
+        ICookieService _cookieService)
     {
         this._userRepo = _userRepo;
         this._tokenService = _tokenService;
         this._cookieService = _cookieService;
-        _eventService = eventService;
     }
 
     public async Task<Result<AuthResponseDto>> Handle(LoginCommand request, CancellationToken ct)
@@ -53,14 +50,6 @@ public class LoginCommandHandler : IRequestHandler<LoginCommand, Result<AuthResp
         if (!cookieResult.IsSuccess)
             return Result<AuthResponseDto>.Failure(cookieResult.ErrorMessage!);
 
-        var eventResult = await _eventService.PublishAsync(new UserLoggedInEvent(
-            user.Id,
-            user.Email,
-            now), ct);
-
-        if (!eventResult.IsSuccess)
-            return Result<AuthResponseDto>.Failure($"Giriş yapıldı ancak log servisi şu an ayakta olmadığı için kaydedilemedi. Hata: {eventResult.ErrorMessage}");
-        
         return Result<AuthResponseDto>.Success(new AuthResponseDto
         {
             AccessToken = accessTokenResult.Data!,

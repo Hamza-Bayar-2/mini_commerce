@@ -11,18 +11,15 @@ public class LogoutCommandHandler : IRequestHandler<LogoutCommand, Result<Unit>>
     private readonly ICookieService _cookieService;
     private readonly ITokenService _tokenService;
     private readonly IRefreshTokenRepository _refreshTokenRepo;
-    private readonly IEventPublisherService _eventService;
 
     public LogoutCommandHandler(
         ICookieService cookieService,
         ITokenService tokenService,
-        IRefreshTokenRepository refreshTokenRepo,
-        IEventPublisherService eventService)
+        IRefreshTokenRepository refreshTokenRepo)
     {
         _cookieService = cookieService;
         _tokenService = tokenService;
         _refreshTokenRepo = refreshTokenRepo;
-        _eventService = eventService;
     }
 
     public async Task<Result<Unit>> Handle(LogoutCommand request, CancellationToken ct)
@@ -48,16 +45,6 @@ public class LogoutCommandHandler : IRequestHandler<LogoutCommand, Result<Unit>>
 
         if (!result.IsSuccess)
             return Result<Unit>.Failure(result.ErrorMessage!);
-
-        if (userId.HasValue)
-        {
-            var eventResult = await _eventService.PublishAsync(new UserLoggedOutEvent(
-                userId.Value,
-                DateTime.UtcNow), ct);
-
-            if (!eventResult.IsSuccess)
-                return Result<Unit>.Failure($"Çıkış yapıldı ancak log servisi şu an ayakta olmadığı için kaydedilemedi. Hata: {eventResult.ErrorMessage}");
-        }
 
         return Result<Unit>.Success(Unit.Value);
     }
