@@ -1,31 +1,27 @@
 using AuthService.Application.Common.Models;
 using AuthService.Application.Features.Auth.Commands.Logout;
 using AuthService.Application.Interfaces.Services;
-using MediatR;
 using Shared.Events.Auth;
 
 namespace AuthService.Application.PipelineBehaviors.Logging.LoggingStrategies;
 
-public class LogoutLoggingStrategy : ILoggingStrategy<LogoutCommand, Result<MediatR.Unit>>
+public class LogoutLoggingStrategy : ILoggingStrategy<LogoutCommand, Result<Guid?>>
 {
     private readonly IEventPublisherService _eventService;
-    private readonly ICookieService _cookieService;
 
-    public LogoutLoggingStrategy(IEventPublisherService eventService, ICookieService cookieService)
+    public LogoutLoggingStrategy(IEventPublisherService eventService)
     {
         _eventService = eventService;
-        _cookieService = cookieService;
     }
 
     public bool CanHandle(LogoutCommand request) => true;
 
-    public async Task PublishLogAsync(LogoutCommand request, Result<MediatR.Unit> response, CancellationToken ct)
+    public async Task PublishLogAsync(LogoutCommand request, Result<Guid?> response, CancellationToken ct)
     {
-        var userId = _cookieService.GetUserId();
-        if (userId.HasValue)
+        if (response.Data.HasValue)
         {
             await _eventService.PublishAsync(new UserLoggedOutEvent(
-                userId.Value,
+                response.Data.Value,
                 DateTime.UtcNow), ct);
         }
     }

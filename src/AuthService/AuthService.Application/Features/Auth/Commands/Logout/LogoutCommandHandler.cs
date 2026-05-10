@@ -6,7 +6,7 @@ using Shared.Events.Auth;
 
 namespace AuthService.Application.Features.Auth.Commands.Logout;
 
-public class LogoutCommandHandler : IRequestHandler<LogoutCommand, Result<Unit>>
+public class LogoutCommandHandler : IRequestHandler<LogoutCommand, Result<Guid?>>
 {
     private readonly ICookieService _cookieService;
     private readonly ITokenService _tokenService;
@@ -22,7 +22,7 @@ public class LogoutCommandHandler : IRequestHandler<LogoutCommand, Result<Unit>>
         _refreshTokenRepo = refreshTokenRepo;
     }
 
-    public async Task<Result<Unit>> Handle(LogoutCommand request, CancellationToken ct)
+    public async Task<Result<Guid?>> Handle(LogoutCommand request, CancellationToken ct)
     {
         Guid? userId = null;
 
@@ -44,8 +44,9 @@ public class LogoutCommandHandler : IRequestHandler<LogoutCommand, Result<Unit>>
         var result = await _cookieService.DeleteCookies();
 
         if (!result.IsSuccess)
-            return Result<Unit>.Failure(result.ErrorMessage!);
+            return Result<Guid?>.Failure(result.ErrorMessage!);
 
-        return Result<Unit>.Success(Unit.Value);
+        return Result<Guid?>.Success(userId);
     }
 }
+

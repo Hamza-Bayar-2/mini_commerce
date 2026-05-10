@@ -29,8 +29,8 @@ public static class DependencyInjection
         });
 
         services.AddScoped<ILoggingStrategy<LoginCommand, Result<AuthResponseDto>>, LoginLoggingStrategy>();
-        services.AddScoped<ILoggingStrategy<RegisterCommand, Result<RegisterResponseDto>>, RegisterLoggingStrategy>();
-        services.AddScoped<ILoggingStrategy<LogoutCommand, Result<Unit>>, LogoutLoggingStrategy>();
+        services.AddScoped<ILoggingStrategy<RegisterCommand, Result<AuthResponseDto>>, RegisterLoggingStrategy>();
+        services.AddScoped<ILoggingStrategy<LogoutCommand, Result<Guid?>>, LogoutLoggingStrategy>();
         services.AddScoped<ILoggingStrategy<RefreshTokenCommand, Result<AuthResponseDto>>, RefreshTokenLoggingStrategy>();
 
         return services;

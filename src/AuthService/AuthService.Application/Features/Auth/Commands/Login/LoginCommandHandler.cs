@@ -52,6 +52,8 @@ public class LoginCommandHandler : IRequestHandler<LoginCommand, Result<AuthResp
 
         return Result<AuthResponseDto>.Success(new AuthResponseDto
         {
+            UserId = user.Id,
+            Email = user.Email,
             AccessToken = accessTokenResult.Data!,
             RefreshToken = refreshTokenResult.Data!.UnhashedToken,
             RefreshTokenExpiresAt = refreshTokenResult.Data!.Entity.ExpiresAt

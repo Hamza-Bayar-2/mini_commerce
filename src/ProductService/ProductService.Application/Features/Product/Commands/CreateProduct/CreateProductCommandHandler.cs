@@ -24,26 +24,11 @@ public class CreateProductCommandHandler : IRequestHandler<CreateProductCommand,
         if (!await _statusService.IsStatusValidAsync(request.StatusId, ct))
             return Result<ProductResponseDto>.Failure("Specified product status not found.");
 
-        var productResult = await _productService.CreateProductAsync(
+        return await _productService.CreateProductAsync(
             request.Name,
             request.Description,
             request.Stock,
             request.StatusId,
             ct);
-
-        if (!productResult.IsSuccess)
-            return productResult;
-
-        var eventResult = await _eventService.PublishAsync(new ProductCreatedEvent(
-            productResult.Data!.Id!.Value,
-            productResult.Data.Name!,
-            productResult.Data.Stock!.Value,
-            productResult.Data.CreatedAt!.Value), ct);
-
-        if (!eventResult.IsSuccess)
-            return Result<ProductResponseDto>.Failure($"Ürün oluşturuldu ancak log servisi şu an ayakta olmadığı için kaydedilemedi. Hata: {eventResult.ErrorMessage}");
-        
-
-        return productResult;
     }
 }

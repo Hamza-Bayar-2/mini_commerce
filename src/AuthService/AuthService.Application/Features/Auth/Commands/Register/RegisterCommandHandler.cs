@@ -8,7 +8,7 @@ using AuthService.Domain.Enums;
 
 namespace AuthService.Application.Features.Auth.Commands.Register;
 
-public class RegisterCommandHandler : IRequestHandler<RegisterCommand, Result<RegisterResponseDto>>
+public class RegisterCommandHandler : IRequestHandler<RegisterCommand, Result<AuthResponseDto>>
 {
     private readonly IUserRepository _userRepo;
     private readonly IRoleRepository _roleRepo;
@@ -27,11 +27,11 @@ public class RegisterCommandHandler : IRequestHandler<RegisterCommand, Result<Re
         _cookieService = cookieService;
     }
 
-    public async Task<Result<RegisterResponseDto>> Handle(RegisterCommand request, CancellationToken ct)
+    public async Task<Result<AuthResponseDto>> Handle(RegisterCommand request, CancellationToken ct)
     {
         var existing = await _userRepo.GetByEmailAsync(request.Email, ct);
         if (existing is not null)
-            return Result<RegisterResponseDto>.Failure("Email already exists.");
+            return Result<AuthResponseDto>.Failure("Email already exists.");
 
         var now = DateTime.UtcNow;
 
@@ -58,19 +58,18 @@ public class RegisterCommandHandler : IRequestHandler<RegisterCommand, Result<Re
         var refreshResult = await _tokenService.GenerateRefreshTokenAsync(user.Id, null, now, ct);
 
         if (!accessResult.IsSuccess || !refreshResult.IsSuccess)
-            return Result<RegisterResponseDto>.Failure("Token generation failed."
+            return Result<AuthResponseDto>.Failure("Token generation failed."
             + accessResult.ErrorMessage + "\n"
             + refreshResult.ErrorMessage);
 
         var cookieResult = await _cookieService.AppendCookies(accessResult.Data!, refreshResult.Data!.UnhashedToken);
         if (!cookieResult.IsSuccess)
-            return Result<RegisterResponseDto>.Failure(cookieResult.ErrorMessage!);
+            return Result<AuthResponseDto>.Failure(cookieResult.ErrorMessage!);
 
-        return Result<RegisterResponseDto>.Success(new RegisterResponseDto
+        return Result<AuthResponseDto>.Success(new AuthResponseDto
         {
             UserId = user.Id,
             Email = user.Email,
-            FullName = $"{user.FirstName} {user.LastName}",
             AccessToken = accessResult.Data!,
             RefreshToken = refreshResult.Data!.UnhashedToken,
             RefreshTokenExpiresAt = refreshResult.Data!.Entity.ExpiresAt

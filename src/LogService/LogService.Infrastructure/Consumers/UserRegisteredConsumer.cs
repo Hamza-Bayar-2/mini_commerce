@@ -19,7 +19,7 @@ public class UserRegisteredConsumer : IConsumer<UserRegisteredEvent>
         var msg = context.Message;
         await _logRepo.AddAsync(new Log
         {
-            Message = $"User registered: {msg.FullName} ({msg.Email}). Id: {msg.UserId}",
+            Message = $"User registered. Id: {msg.UserId}",
             ServiceName = "AuthService",
             CreatedAt = msg.RegisteredAt
         }, context.CancellationToken);

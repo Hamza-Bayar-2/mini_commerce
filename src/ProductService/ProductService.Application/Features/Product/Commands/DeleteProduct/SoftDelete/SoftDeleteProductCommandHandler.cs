@@ -19,20 +19,6 @@ public class SoftDeleteProductCommandHandler : IRequestHandler<SoftDeleteProduct
 
     public async Task<Result<ProductResponseDto>> Handle(SoftDeleteProductCommand request, CancellationToken ct)
     {
-        var result = await _productService.SoftDeleteProductAsync(request.Id, ct);
-
-        if (!result.IsSuccess)
-            return result;
-
-        var eventResult = await _eventService.PublishAsync(new ProductDeletedEvent(
-            result.Data!.Id!.Value,
-            result.Data.Name!,
-            result.Data.Stock!.Value,
-            result.Data.DeletedAt!.Value), ct);
-
-        if (!eventResult.IsSuccess)
-            return Result<ProductResponseDto>.Failure($"Ürün silindi ancak log servisi şu an ayakta olmadığı için kaydedilemedi. Hata: {eventResult.ErrorMessage}");
-
-        return result;
+        return await _productService.SoftDeleteProductAsync(request.Id, ct);
     }
 }

@@ -4,4 +4,4 @@ using MediatR;
 
 namespace AuthService.Application.Features.Auth.Commands.Logout;
 
-public record LogoutCommand() : ICommand<Result<Unit>>;
+public record LogoutCommand() : ICommand<Result<Guid?>>;

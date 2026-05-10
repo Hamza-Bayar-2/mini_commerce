@@ -9,23 +9,20 @@ namespace AuthService.Application.PipelineBehaviors.Logging.LoggingStrategies;
 public class RefreshTokenLoggingStrategy : ILoggingStrategy<RefreshTokenCommand, Result<AuthResponseDto>>
 {
     private readonly IEventPublisherService _eventService;
-    private readonly ICookieService _cookieService;
 
-    public RefreshTokenLoggingStrategy(IEventPublisherService eventService, ICookieService cookieService)
+    public RefreshTokenLoggingStrategy(IEventPublisherService eventService)
     {
         _eventService = eventService;
-        _cookieService = cookieService;
     }
 
     public bool CanHandle(RefreshTokenCommand request) => true;
 
     public async Task PublishLogAsync(RefreshTokenCommand request, Result<AuthResponseDto> response, CancellationToken ct)
     {
-        var userId = _cookieService.GetUserId();
-        if (userId.HasValue)
+        if (response.Data != null)
         {
             await _eventService.PublishAsync(new TokenRefreshedEvent(
-                userId.Value,
+                response.Data.UserId,
                 DateTime.UtcNow), ct);
         }
     }

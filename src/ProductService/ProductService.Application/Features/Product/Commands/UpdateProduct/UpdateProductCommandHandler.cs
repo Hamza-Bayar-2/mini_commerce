@@ -24,26 +24,12 @@ public class UpdateProductCommandHandler : IRequestHandler<UpdateProductCommand,
         if (request.StatusId.HasValue && !await _statusService.IsStatusValidAsync(request.StatusId.Value, ct))
             return Result<ProductResponseDto>.Failure("Specified product status not found.");
 
-        var productResult = await _productService.UpdateProductAsync(
+        return await _productService.UpdateProductAsync(
             request.Id, 
             request.Name, 
             request.Description, 
             request.Stock, 
             request.StatusId, 
             ct);
-
-        if (!productResult.IsSuccess)
-            return productResult;
-
-        var eventResult = await _eventService.PublishAsync(new ProductUpdatedEvent(
-            productResult.Data!.Id!.Value,
-            productResult.Data.Name!,
-            productResult.Data.Stock!.Value,
-            productResult.Data.UpdatedAt!.Value), ct);
-
-        if (!eventResult.IsSuccess)
-            return Result<ProductResponseDto>.Failure($"Ürün güncellendi ancak log servisi şu an ayakta olmadığı için kaydedilemedi. Hata: {eventResult.ErrorMessage}");
-
-        return productResult;
     }
 }

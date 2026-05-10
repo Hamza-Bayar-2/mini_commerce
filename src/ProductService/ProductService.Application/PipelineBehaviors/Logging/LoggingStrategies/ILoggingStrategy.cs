@@ -1,4 +1,4 @@
-namespace AuthService.Application.PipelineBehaviors.Logging.LoggingStrategies;
+namespace ProductService.Application.PipelineBehaviors.Logging.LoggingStrategies;
 
 public interface ILoggingStrategy<TRequest, TResponse>
 {

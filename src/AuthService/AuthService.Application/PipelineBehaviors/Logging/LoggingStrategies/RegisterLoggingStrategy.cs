@@ -1,14 +1,12 @@
 using AuthService.Application.Common.Models;
 using AuthService.Application.DTOs;
 using AuthService.Application.Features.Auth.Commands.Register;
-using AuthService.Application.Interfaces;
-using AuthService.Application.Interfaces.Repositories;
 using AuthService.Application.Interfaces.Services;
 using Shared.Events.Auth;
 
 namespace AuthService.Application.PipelineBehaviors.Logging.LoggingStrategies;
 
-public class RegisterLoggingStrategy : ILoggingStrategy<RegisterCommand, Result<RegisterResponseDto>>
+public class RegisterLoggingStrategy : ILoggingStrategy<RegisterCommand, Result<AuthResponseDto>>
 {
     private readonly IEventPublisherService _eventService;
 
@@ -19,14 +17,13 @@ public class RegisterLoggingStrategy : ILoggingStrategy<RegisterCommand, Result<
 
     public bool CanHandle(RegisterCommand request) => true;
     
-    public async Task PublishLogAsync(RegisterCommand request, Result<RegisterResponseDto> response, CancellationToken ct)
+    public async Task PublishLogAsync(RegisterCommand request, Result<AuthResponseDto> response, CancellationToken ct)
     {
         if (response.Data != null)
         {
             await _eventService.PublishAsync(new UserRegisteredEvent(
                 response.Data.UserId,
                 response.Data.Email,
-                response.Data.FullName,
                 DateTime.UtcNow), ct);
         }
     }

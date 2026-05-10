@@ -54,6 +54,8 @@ public class RefreshTokenCommandHandler : IRequestHandler<RefreshTokenCommand, R
 
         return Result<AuthResponseDto>.Success(new AuthResponseDto
         {
+            UserId = user.Id,
+            Email = user.Email,
             AccessToken = accessResult.Data!,
             RefreshToken = refreshResult.Data!.UnhashedToken,
             RefreshTokenExpiresAt = refreshResult.Data!.Entity.ExpiresAt
