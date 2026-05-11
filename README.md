@@ -2,7 +2,7 @@
 
 A microservices-based e-commerce application built with **.NET 10**.
 Implements `Onion Architecture`, `CQRS pattern`, `JWT authentication`,
-`Redis caching`, `RabbitMQ event-driven messaging`, and `YARP API Gateway.
+`Redis caching`, `RabbitMQ event-driven messaging`, and `YARP API Gateway`.
 
 ## Documentation
 
