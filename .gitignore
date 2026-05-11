@@ -124,7 +124,6 @@ packages/
 docker-compose.override.yml
 docker-compose.*.yml
 !docker-compose.yml
-Dockerfile*
 **/.docker/
 **/docker/
 

@@ -1,0 +1,126 @@
+version: "3.8"
+
+services:
+  sqlserver_db:
+    image: mcr.microsoft.com/mssql/server:2022-latest
+    container_name: ${DB_USERNAME}
+    environment:
+      - ACCEPT_EULA=Y
+      - MSSQL_SA_PASSWORD=${DB_PASSWORD}
+    healthcheck:
+      test: ["CMD-SHELL", "/opt/mssql-tools18/bin/sqlcmd -S localhost -U sa -P ${DB_PASSWORD} -C -Q 'SELECT 1' || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - kayra_network
+
+  redis_cache:
+    image: redis:alpine
+    container_name: ${REDIS_USERNAME}
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - kayra_network
+
+  rabbitmq:
+    image: rabbitmq:3-management
+    container_name: ${RABBITMQ_HOST}
+    healthcheck:
+      test: ["CMD", "rabbitmq-diagnostics", "-q", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - kayra_network
+
+  auth_service:
+    build:
+      context: .
+      dockerfile: src/AuthService/AuthService.API/Dockerfile
+    container_name: auth_service
+    environment:
+      - CONNECTIONSTRINGS__DEFAULT=Server=${DB_USERNAME},1433;Database=AuthDb;User Id=sa;Password=${DB_PASSWORD};TrustServerCertificate=True
+      - RABBITMQ__HOST=${RABBITMQ_HOST}
+      - RABBITMQ__USERNAME=guest
+      - RABBITMQ__PASSWORD=guest
+      - JWTSETTINGS__KEY=${JWT_SECRET}
+      - JWTSETTINGS__ISSUER=AuthService
+      - JWTSETTINGS__AUDIENCE=AuthService Clients
+      - JWTSETTINGS__EXPIRYMINUTES=15
+      - COOKIE__DOMAIN=your-domain.com
+    depends_on:
+      sqlserver_db:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+      redis_cache:
+        condition: service_healthy
+    networks:
+      - kayra_network
+
+  product_service:
+    build:
+      context: .
+      dockerfile: src/ProductService/ProductService.API/Dockerfile
+    container_name: product_service
+    environment:
+      - CONNECTIONSTRINGS__DEFAULT=Server=${DB_USERNAME},1433;Database=ProductDb;User Id=sa;Password=${DB_PASSWORD};TrustServerCertificate=True
+      - CONNECTIONSTRINGS__REDIS=${REDIS_USERNAME}:6379
+      - RABBITMQ__HOST=${RABBITMQ_HOST}
+      - RABBITMQ__USERNAME=guest
+      - RABBITMQ__PASSWORD=guest
+      - JWTSETTINGS__KEY=${JWT_SECRET}
+      - JWTSETTINGS__ISSUER=AuthService
+    depends_on:
+      sqlserver_db:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+    networks:
+      - kayra_network
+
+  log_service:
+    build:
+      context: .
+      dockerfile: src/LogService/LogService.API/Dockerfile
+    container_name: log_service
+    environment:
+      - CONNECTIONSTRINGS__DEFAULT=Server=${DB_USERNAME},1433;Database=LogDb;User Id=sa;Password=${DB_PASSWORD};TrustServerCertificate=True
+      - RABBITMQ__HOST=${RABBITMQ_HOST}
+      - RABBITMQ__USERNAME=guest
+      - RABBITMQ__PASSWORD=guest
+    depends_on:
+      sqlserver_db:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+    networks:
+      - kayra_network
+
+  gateway:
+    build:
+      context: .
+      dockerfile: src/Gateway/Gateway.API/Dockerfile
+    container_name: gateway
+    environment:
+      - REVERSEPROXY__CLUSTERS__AUTH-CLUSTER__DESTINATIONS__AUTH__ADDRESS=http://auth_service:8080
+      - REVERSEPROXY__CLUSTERS__PRODUCT-CLUSTER__DESTINATIONS__PRODUCT__ADDRESS=http://product_service:8080
+      - REVERSEPROXY__CLUSTERS__LOG-CLUSTER__DESTINATIONS__LOG__ADDRESS=http://log_service:8080
+      - JWTSETTINGS__KEY=${JWT_SECRET}
+      - JWTSETTINGS__ISSUER=AuthService
+    ports:
+      - "5292:8080"
+    depends_on:
+      - auth_service
+      - product_service
+      - log_service
+    networks:
+      - kayra_network
+
+networks:
+  kayra_network:
+    driver: bridge

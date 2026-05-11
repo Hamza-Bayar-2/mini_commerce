@@ -6,6 +6,13 @@ using Microsoft.IdentityModel.Tokens;
 
 var builder = WebApplication.CreateBuilder(args);
 
+// Swagger for Gateway Aggregation
+builder.Services.AddEndpointsApiExplorer();
+builder.Services.AddSwaggerGen(c =>
+{
+    c.SwaggerDoc("v1", new() { Title = "Mini Commerce Gateway API", Version = "v1" });
+});
+
 // YARP
 builder.Services.AddReverseProxy()
     .LoadFromConfig(builder.Configuration.GetSection("ReverseProxy"));
@@ -84,6 +91,17 @@ app.UseRateLimiter();
 
 app.UseAuthentication();
 app.UseAuthorization();
+
+app.UseSwagger();
+app.UseSwaggerUI(options =>
+{
+    options.SwaggerEndpoint("/swagger/v1/swagger.json", "Gateway API");
+    
+    // YARP üzerinden servislerin kendi swagger.json dosyalarına yönlendirme
+    options.SwaggerEndpoint("/swagger/auth/v1/swagger.json", "Auth Service");
+    options.SwaggerEndpoint("/swagger/product/v1/swagger.json", "Product Service");
+    options.SwaggerEndpoint("/swagger/log/v1/swagger.json", "Log Service");
+});
 
 app.MapReverseProxy();
 app.Run();

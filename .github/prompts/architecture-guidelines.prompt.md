@@ -104,3 +104,22 @@ We separate business logic from event publishing (logging) using a Strategy Patt
   - Handlers should focus solely on the business operation.
   - Create a specific strategy class under `PipelineBehaviors.Logging.LoggingStrategies` for each event you want to log.
   - Register these strategies in `DependencyInjection.cs`.
+
+## 7. Distributed Architecture and Swagger Standards
+
+The project follows a Microservices architecture orchestrated via Docker Compose and routed through a YARP API Gateway.
+
+### API Gateway & Routing
+- **Single Entry Point:** All external requests MUST go through the Gateway (`port 5292`).
+- **Service Discovery:** Services communicate using their Docker network names (e.g., `http://auth_service:8080`).
+
+### Swagger Aggregation
+- **Unified Documentation:** The Gateway aggregates Swagger JSON from all microservices. 
+- **Exposing Endpoints:** All microservices MUST enable Swagger (`UseSwagger`, `UseSwaggerUI`) in ALL environments (Production/Docker included) so the Gateway can fetch their documentation.
+- **Gateway Configuration:** When adding a new service, you MUST:
+  1. Add a route in Gateway's `appsettings.json` under `ReverseProxy:Routes` that maps `/swagger/{service-name}/{**catch-all}` to the service's cluster with a `PathPattern` transform.
+  2. Register the `SwaggerEndpoint` in Gateway's `Program.cs` under the `UseSwaggerUI` options.
+
+### Environment Management
+- **Environment Variables:** Always prefer Docker environment variables (using `__` for hierarchy, e.g., `JWTSETTINGS__KEY`) over hardcoded values in `appsettings.json`.
+- **.env File:** Local development secrets MUST be managed in a `.env` file at the root, which is consumed by `docker-compose.yaml`.
