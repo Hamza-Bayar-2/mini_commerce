@@ -16,6 +16,6 @@ public class GetAllProductsQueryHandler : IRequestHandler<GetAllProductsQuery, R
 
     public async Task<Result<IEnumerable<ProductResponseDto>>> Handle(GetAllProductsQuery request, CancellationToken ct)
     {
-        return await _productService.GetAllProductsAsync(ct);
+        return await _productService.GetAllProductsAsync(request.PageNumber, request.PageSize, request.Search, ct);
     }
 }

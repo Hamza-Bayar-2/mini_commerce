@@ -4,4 +4,8 @@ using ProductService.Application.Interfaces;
 
 namespace ProductService.Application.Features.Product.Queries.GetAllProducts;
 
-public record GetAllProductsQuery() : IQuery<Result<IEnumerable<ProductResponseDto>>>;
+public record GetAllProductsQuery(
+    int PageNumber,
+    int PageSize,
+    string? Search
+) : IQuery<Result<IEnumerable<ProductResponseDto>>>;

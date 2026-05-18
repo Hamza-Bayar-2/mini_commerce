@@ -87,9 +87,9 @@ public class ProductController : ControllerBase
     
     [HttpGet]
     [AllowAnonymous]
-    public async Task<IActionResult> GetAllProductsAsync(CancellationToken ct)
+    public async Task<IActionResult> GetAllProductsAsync(GetAllProductsQuery query, CancellationToken ct)
     {
-        var result = await _mediator.Send(new GetAllProductsQuery(), ct);
+        var result = await _mediator.Send(query, ct);
         if (!result.IsSuccess)
             return BadRequest(new { Error = result.ErrorMessage });
 

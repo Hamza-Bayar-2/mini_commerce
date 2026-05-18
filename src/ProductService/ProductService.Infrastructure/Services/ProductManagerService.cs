@@ -4,6 +4,7 @@ using ProductService.Application.Interfaces.Repositories;
 using ProductService.Application.Interfaces.Services;
 using ProductService.Domain.Entities;
 using ProductService.Application.Mappings;
+using Microsoft.EntityFrameworkCore;
 
 namespace ProductService.Infrastructure.Services;
 
@@ -106,13 +107,33 @@ public class ProductManagerService : IProductService
         return Result<ProductResponseDto>.Success(ProductMappings.MapToDto(product));
     }
 
-    public async Task<Result<IEnumerable<ProductResponseDto>>> GetAllProductsAsync(CancellationToken ct)
+    public async Task<Result<IEnumerable<ProductResponseDto>>> GetAllProductsAsync(int pageNumber, int pageSize, string? search, CancellationToken ct)
     {
-        var products = await _productRepo.GetAllAsync(ct);
-        
-        var activeProducts = products.Where(p => !p.DeletedAt.HasValue);
-        var dtoList = activeProducts.Select(ProductMappings.MapToDto);
-        
+        // 1. ADIM: Sorgu Planının Hazırlanması (IQueryable - Deferred Execution)
+        // Bu aşamada henüz veritabanına gidilmez, sadece SQL'in 'şablonu' oluşturulur.
+        var query = _productRepo.GetQueryable()
+            .Where(p => !p.DeletedAt.HasValue); // Sadece silinmemiş ürünleri getir.
+
+        // 2. ADIM: Dinamik Filtreleme
+        // Arama kriteri varsa, SQL planına 'LIKE' operatörü eklenir.
+        if (!string.IsNullOrEmpty(search))
+        {
+            var lowerSearch = search.ToLower();
+            query = query.Where(p => p.Name.ToLower().Contains(lowerSearch));
+        }
+
+        // 3. ADIM: Sayfalama (Pagination)
+        // OFFSET ve FETCH NEXT komutları SQL planına dahil edilir.
+        // ToListAsync() çağrılana kadar veritabanına sorgu atılmaz.
+        var products = await query
+            .Skip(pageNumber * pageSize) // Belirlenen kayıt kadar atla.
+            .Take(pageSize)             // Belirlenen kayıt kadar getir.
+            .ToListAsync(ct);           // KRİTİK: Sorgu burada tetiklenir ve SQL veritabanına gönderilir.
+
+        // 4. ADIM: Belleğe Alınan Verinin Dönüştürülmesi (Mapping)
+        // Veritabanından gelen nesneler, API'nin döneceği DTO tipine çevrilir.
+        var dtoList = products.Select(ProductMappings.MapToDto);
+
         return Result<IEnumerable<ProductResponseDto>>.Success(dtoList);
     }
 }

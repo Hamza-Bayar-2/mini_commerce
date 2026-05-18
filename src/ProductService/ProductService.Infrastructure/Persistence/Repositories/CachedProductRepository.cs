@@ -1,3 +1,4 @@
+using System.Linq.Expressions;
 using System.Text.Json;
 using Microsoft.Extensions.Caching.Distributed;
 using Microsoft.Extensions.Logging;
@@ -26,33 +27,12 @@ public class CachedProductRepository : IProductRepository
         _logger = logger;
     }
 
-    public async Task<IEnumerable<Product>> GetAllAsync(CancellationToken ct)
+    public IQueryable<Product> GetQueryable() => _decorated.GetQueryable();
+
+    public async Task<IEnumerable<Product>> GetWhere(Expression<Func<Product, bool>> predicate, CancellationToken ct)
     {
-        try
-        {
-            var json = await _cache.GetStringAsync(AllProductsKey, ct);
-            if (json is not null)
-                return JsonSerializer.Deserialize<IEnumerable<Product>>(json) ?? Array.Empty<Product>();
-
-            var products = await _decorated.GetAllAsync(ct);
-            if (products is not null && products.Any())
-            {
-                await _cache.SetStringAsync(
-                    AllProductsKey,
-                    JsonSerializer.Serialize(products),
-                    new DistributedCacheEntryOptions
-                    {
-                        AbsoluteExpirationRelativeToNow = TimeSpan.FromMinutes(5)
-                    }, ct);
-            }
-
-            return products ?? Array.Empty<Product>();
-        }
-        catch (Exception ex)
-        {
-            _logger.LogWarning(ex, "Cache unavailable, falling back to database.");
-            return await _decorated.GetAllAsync(ct);
-        }
+        // Not: GetWhere genellikle dinamik olduğu için cache'lemek yerine doğrudan veritabanına iletilir.
+        return await _decorated.GetWhere(predicate, ct);
     }
 
     public async Task<Product?> GetByIdAsync(Guid id, CancellationToken ct)

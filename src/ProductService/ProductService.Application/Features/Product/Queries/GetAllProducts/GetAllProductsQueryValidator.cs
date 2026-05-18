@@ -6,6 +6,15 @@ public class GetAllProductsQueryValidator : AbstractValidator<GetAllProductsQuer
 {
     public GetAllProductsQueryValidator()
     {
-        // No validation rules necessary for retrieving all products without pagination.
+        RuleFor(x => x.PageNumber)
+            .NotNull()
+            .GreaterThanOrEqualTo(0);
+
+        RuleFor(x => x.PageSize)
+            .NotNull()
+            .GreaterThanOrEqualTo(1);
+
+        RuleFor(x => x.Search)
+            .MaximumLength(100);
     }
 }
